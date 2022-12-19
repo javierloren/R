@@ -1,0 +1,12 @@
+getwd()
+fileURL <- "https://docs.google.com/spreadsheets/d/1CDWBeqpUTBd1TkmDz_M6UGRWdHgU7LOcoiGRTvIttKA/edit#gid=0"
+download.file(fileURL,"EXAMPLE_DataToClean", mode = "wb")
+
+
+
+09ff5528-919e-43a9-9593-1a5390f282b5
+
+
+94j8Q~_guc3zmZORwMak_HFaimPyXIdZvkAnFb44
+
+arodriguezvi@upsa.es

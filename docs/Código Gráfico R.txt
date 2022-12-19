@@ -1,0 +1,8 @@
+library(wordcloud)
+library(RColorBrewer)
+words <- BestRunJuice_SampleModel$`Sales Manager`
+frequency <- BestRunJuice_SampleModel$`Quantity sold`
+wordcloud (words, frequency, scale = c(3, 1),
+random.order=FALSE,           
+rot.per=0.2,
+colors=brewer.pal(89, "Dark2"))
