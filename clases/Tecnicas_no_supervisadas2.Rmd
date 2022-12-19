@@ -1,0 +1,781 @@
+---
+title: "Tecnicas_no_supervisadas2"
+author: "Javier de Castro Rodríguez"
+date: "2022-11-21"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r}
+path_source <- "C:/Users/javie/Desktop/Master" 
+  path_data <- "C:/Users/javie/Desktop/Master"   
+  setwd(path_data)
+```
+
+```{r}
+libs <- c("tidyverse","ggplot2","datasets","plyr", "ggmap","dplyr","RColorBrewer","vcd",
+            "factoextra", "corrplot", "reshape2", "lattice", "gridExtra","RgoogleMaps",
+            "htmlwidgets", "Hmisc", "SnowballC", "kohonen", "maptools","ggpubr","circlize",
+            "dummies","rgeos", "sp", "wordcloud", "deldir","NbClust","mixtools","utils",
+            "PerformanceAnalytics", "graphics", "FactoMineR", "ppcor", "cluster",
+            "arulesViz","arules","leaflet", "devtools","htmltools","mixtools","gplots" )
+
+```
+
+```{r}
+for (i in libs){
+    print(i)
+    if(!require(i, character.only = TRUE)) 
+      { install.packages(i, dependencies=TRUE); library(i) }
+}
+```
+```{r}
+  { 
+    # https://en.wikipedia.org/wiki/Anscombe's_quartet
+    df <- read.table(file.path(path_data,'Anscombe.txt'), header=T, 
+                     stringsAsFactors = FALSE)
+    df %>% group_by(case) %>% filter(!is.na(x)) %>%
+      dplyr::summarise(
+        n = n(),
+        mean_x = mean(x),
+        variance_x = var(x), 
+        mean_y = mean(y),
+        variance_y = var(y),
+        corr_ = cor(x,y)
+      )
+  }  
+
+```
+```{r}
+ ggplot(df, aes(x=x, y=y, color=case)) +  geom_point()  +  facet_wrap( ~ case, ncol = 2)
+```
+
+```{r}
+# Histogram, Density
+  # https://en.wikipedia.org/wiki/Kernel_density_estimation
+  # contraste funciones densidad
+  ggplot(df, aes(x=y, y=..count..)) + 
+    geom_histogram(fill="cornsilk", colour="grey60", binwidth=1) +
+    geom_density()
+
+  p1 <- ggplot(df, aes(x=x)) + geom_density() + xlim(0, 20) + facet_grid(case ~ .)
+  p2 <- ggplot(df, aes(x=y)) + geom_density() + xlim(0, 20) + facet_grid(case ~ .)
+  grid.arrange(p1, p2 , ncol=2)
+```
+
+
+```{r}
+ # función densidad 2D
+  ggplot(filter(df, case=='A'), aes(x=x, y=y)) + geom_point() + 
+    stat_density2d() + xlim(0,20) +ylim(0,15)
+  
+  ggplot(filter(df, case=='A'), aes(x=x, y=y)) + geom_point() + 
+    stat_density2d(aes(fill = ..level..), geom = "polygon") + xlim(0,20) +ylim(0,15) 
+  
+
+```
+```{r}
+ # >>> to do:  DatasaurusDozen.
+  # https://www.autodesk.com/research/publications/same-stats-different-graphs
+    # install.packages("datasauRus")
+    require(datasauRus) # datasaurus_dozen
+  {
+    datasaurus_dozen %>% 
+      group_by(dataset) %>% 
+      dplyr::summarise(
+        mean_x    = mean(x),
+        mean_y    = mean(y),
+        std_dev_x = sd(x),
+        std_dev_y = sd(y),
+        corr_x_y  = cor(x, y)
+      )
+    
+    ggplot(datasaurus_dozen, aes(x = x, y = y, colour = dataset))+
+      geom_point()+
+      theme_void()+
+      theme(legend.position = "none")+
+      facet_wrap(~dataset, ncol = 3)
+    }
+        ( hade=TRUE)
+```
+```{r}
+ # fuente: ggplot2: A backstage tour, Hadley Wickham
+  
+  # houston crime
+  require(ggplot2)
+  require(reshape2)
+  require(RgoogleMaps)
+  require(ggmap)
+  require(grid)
+  
+```
+```{r}
+# map 1
+  {
+    theft <- subset(crime, offense == "theft" & between(lat, 29,30.2) & lon > -95.8)
+    lonr <- range(theft$lon)
+    latr <- range(theft$lat)
+    
+    # https://rpubs.com/jiayiliu/ggmap_examples 
+    # https://console.cloud.google.com/google/maps-apis/credentials?project=tutorial-168315
+    # h_map <- GetMap.bbox(lonr, latr, size = c(640, 640), API_console_key=key)
+    h_map <- get(load("crime_map.rda"))
+  
+    
+    ggplot(theft, aes(lon, lat)) +
+      annotation_custom((rasterGrob(h_map$myTile, 
+                            width = unit(1,"npc"), 
+                            height = unit(1,"npc"))), lonr[1], lonr[2], latr[1], latr[2]) +
+      geom_density2d(colour = "black") +
+      geom_point(size=0.1, color="grey", alpha=0.2) 
+  }
+```
+```{r}
+
+ # https://leafletjs.com/examples/quick-start/  
+  
+{
+  require(leaflet)
+    leaflet <- leaflet() %>% setView(0,0,3)
+    esri <- grep("^Esri", providers, value = TRUE)
+    
+    for (provider in esri) {
+      leaflet <- leaflet %>% addProviderTiles(provider, group = provider)
+    }
+      leaflet %>%
+      addLayersControl(baseGroups = names(esri),
+                       options = layersControlOptions(collapsed = FALSE)) %>%
+      addMiniMap(tiles = esri[[3]], toggleDisplay = TRUE,
+                 position = "bottomleft") %>%
+      htmlwidgets::onRender("
+                            function(el, x) {
+                            var myMap = this;
+                            myMap.on('baselayerchange',
+                            function (e) {
+                            myMap.minimap.changeLayer(L.tileLayer.provider(e.name));
+                            })
+                            }")
+
+    
+    library(htmltools) 
+    aux_ <- 1:30
+    leaflet(theft) %>% addTiles() %>%
+      addMarkers(~lon[aux_], ~lat[aux_], label = ~htmlEscape(address[aux_]))
+} 
+```
+```{r}
+#======================= usefull representations  ====================
+ 
+  # https://rpubs.com/hadley/ggplot-intro
+  # book: R graphics Cookbook (O'Reilly)
+  help(mpg)
+  ggplot(mpg, aes(x=hwy, y=..density..)) +
+    geom_histogram(fill="cornsilk", colour="grey60", binwidth=1) +
+    geom_density() 
+  quantile(mpg$hwy, 0.1) # median(mpg$hwy)
+  ecdf(mpg$hwy)(20) # 38%
+  
+  
+  # Smoothed conditional means
+  # https://ggplot2.tidyverse.org/reference/geom_smooth.html
+  qplot(displ, hwy, data=mpg, facets = . ~ year) + geom_smooth(method="loess")
+
+```
+```{r}
+# Boxplots
+  # https://en.wikipedia.org/wiki/Box_plot
+  # https://www.researchgate.net/figure/The-main-components-of-a-boxplot-median-quartiles-whiskers-fences-and-outliers_fig6_303779929
+  qplot(class, hwy, data = mpg, geom = 'boxplot') 
+  qplot(class, hwy, data = mpg, geom = 'violin') 
+
+```
+```{r}
+# Dot Plots
+  # http://www.statmethods.net/graphs/dot.html
+  help(mtcars)
+  aux_ <- mtcars %>% rownames_to_column %>%
+    arrange(mpg) %>% 
+    mutate(cyl = as.factor(cyl)) %>%
+    mutate(color = case_when(
+      cyl==4 ~ "red",
+      cyl==6 ~ "blue",
+      cyl==8 ~ "darkgreen"))
+  dotchart(aux_$mpg,labels=aux_$rowname,cex=.7,groups= aux_$cyl,
+           main="Gas Milage for Car Models\ngrouped by cylinder",
+           xlab="Miles Per Gallon", gcolor="black", color=aux_$color) 
+
+```
+```{r}
+# Scatter Plot 
+  # http://www.statmethods.net/graphs/scatterplot.html
+  require("PerformanceAnalytics")
+  chart.Correlation(mtcars[,c(1,3,4,5,6)], histogram=TRUE, pch=19, method="pearson")
+```
+
+
+```{r}
+# https://rpkgs.datanovia.com/ggpubr/  easy-to-use functions 
+  p <- mtcars %>% mutate(am=as.factor(am)) %>% 
+    ggboxplot(x = "cyl", y = "mpg",
+                 color = "am", palette =c("#00AFBB", "#E7B800"),
+                 add = "jitter")#, shape = "gear")
+  
+  my_comparisons <- list( c("4", "6"), c("6", "8"), c("4", "8") )
+  p + stat_compare_means(comparisons = my_comparisons, method="t.test")+ 
+    
+    # Add pairwise comparisons p-value
+  
+  stat_compare_means(label.y = 50) 
+  
+```
+
+```{r}
+ # chord diagrams and complex heatmaps
+  # https://jokergoo.github.io/circlize_book/book/a-complex-example-of-chord-diagram.html
+  # https://jokergoo.github.io/ComplexHeatmap-reference/book/more-examples.html
+  {
+    library(circlize)
+    set.seed(999)
+    mat = matrix(sample(18, 18), 3, 6) 
+    rownames(mat) = paste0("S", 1:3)
+    colnames(mat) = paste0("E", 1:6)
+    mat
+    
+    df = data.frame(from = rep(rownames(mat), times = ncol(mat)),
+                   to = rep(colnames(mat), each = nrow(mat)),
+                   value = as.vector(mat),
+                   stringsAsFactors = FALSE)
+ df
+    chordDiagram(mat)
+  
+    }
+```
+
+ 
+```{r}
+#======================== Visualize contingence tables ===========
+{
+  # Mosaic Plot Example
+  # http://www.statmethods.net/advgraphs/mosaic.html
+  # https://cran.r-project.org/web/packages/vcd/vignettes/strucplot.pdf
+
+  # HairEyeColor
+  {
+    require(graphics)
+    require(corrplot)
+    require(factoextra)
+    require(vcd)
+    mosaicplot(HairEyeColor, shade = TRUE)
+  }
+}
+```
+
+
+```{r}
+  # alzheimer
+{
+    data("alzheimer", package = "coin")
+    alz <- xtabs (~ smoking + disease, data = alzheimer)
+    mosaicplot(alz, shade = TRUE, las=2, main = "alzheimer")
+    assoc(alz, shade=TRUE)
+    
+    xtabs(~ smoking, data = alzheimer) %>% prop.table %>% round(4)
+    xtabs(~ disease, data = alzheimer) %>% prop.table %>% round(4)
+    xtabs(~ smoking+disease, data = alzheimer) %>% prop.table %>% round(2)
+    sum(alz) 
+    
+}
+```
+
+```{r}
+{
+  # Chi-Square graphic
+    sum(chisq$residuals^2) 
+    curve(dchisq(x, df = 6), from = 0, to = 40)
+    pchisq(q=28, df=6, lower.tail=FALSE)
+    
+    x_vector <- seq(15, 40)
+    p_vector <- dchisq(x_vector, df = 6)
+    polygon(c(x_vector, rev(x_vector)), c(p_vector, rep(0, length(p_vector))),
+            col = adjustcolor('red', alpha=0.3), border = NA)
+  }
+
+```
+```{r}
+(chisq <- chisq.test(alz))
+    (chisq$observed)
+    (round(chisq$expected,2))
+    (round(chisq$residuals, 3))  # Pearson residuals (obs - exp / sqrt(exp) 
+
+```
+```{r}
+# Chi-Square graphic
+    sum(chisq$residuals^2) 
+    curve(dchisq(x, df = 6), from = 0, to = 40)
+    pchisq(q=28, df=6, lower.tail=FALSE)
+
+```
+
+```{r}
+ # housetasks
+  {
+    # housetasks http://www.sthda.com/english/wiki/chi-square-test-of-independence-in-r
+    data(housetasks)
+    file_path <- "http://www.sthda.com/sthda/RDoc/data/housetasks.txt"
+    housetasks <- read.delim(file_path, row.names = 1)
+    dt <- as.table(as.matrix(housetasks))
+    mosaicplot(dt, shade = TRUE, las=2, main = "housetasks")
+    assoc(head(dt, 5), shade = TRUE, las=3)
+    
+    # other representation
+    chisq <- chisq.test(housetasks)
+    corrplot(chisq$residuals, is.cor = FALSE)
+  }
+
+```
+```{r}
+  # >> to do: data(children)
+  # >>> to do: Titanic
+  titanic=get(load("titanic.raw.rdata"))
+
+```
+
+```{r}
+data(children)
+
+```
+
+```{r}
+  cor.test(mtcars$gear, mtcars$am)
+  chart.Correlation(mtcars[, c(10,9,4,5,6)], histogram=TRUE, pch=19, method="pearson")
+
+```
+
+```{r}
+  # tests the H0 hypothesis that the samples came from a Normal distribution
+  shapiro.test(rnorm(1000, mean = 5, sd = 1)) 
+    # failure to reject the null (that the data are normal).
+  shapiro.test(runif(50, min = 2, max = 4))
+    #  reject the null (that the data are normal).
+  shapiro.test(mtcars$mpg) # normality
+  plot(density(mtcars$mpg))
+  shapiro.test(mtcars$am) # no normality
+  plot(density(mtcars$am))
+
+```
+
+```{r}
+  # table format 
+  require("Hmisc")
+  flattenCorrMatrix <- function(cormat, pmat) {
+    ut <- upper.tri(cormat)
+    data.frame(
+      row = rownames(cormat)[row(cormat)[ut]],
+      column = rownames(cormat)[base::col(cormat)[ut]],
+      cor  =(cormat)[ut],
+      p = pmat[ut]
+    )
+  }
+  res2 <- rcorr(as.matrix(mtcars[,1:7]))
+  flattenCorrMatrix(res2$r, res2$P)
+
+```
+```{r}
+# spearman
+  df <- data.frame(IQ=c(106,86,100,101,99,103,97,113,112,110), 
+                   TV=c(7,0,27,50,28,29,20,12,6,17)) %>% arrange(IQ)
+  plot(df$IQ, df$TV, type='l')
+   
+  df$rank1 <- rank(df$IQ)
+  df$rank2 <- rank(df$TV)
+  cor(df$IQ,df$TV, method='pearson')
+  cor(df$IQ,df$TV, method='spearman')
+  cor(df$rank1,df$rank2, method='pearson')
+  cor(df$IQ,df$TV, method='kendall')
+
+```
+```{r}
+  # http://www.sthda.com/english/wiki/print.php?id=61
+  require(corrplot)
+  
+  # Third Correlogram Example
+  mcor <- cor(mtcars)
+  round(mcor, digits=2)
+  corrplot(mcor, method="shade", shade.col=NA, tl.srt=45,
+           addCoef.col="black", order="AOE", type='lower')
+  
+  cor(mtcars$gear, mtcars$am)
+
+
+```
+
+```{r}
+  # partial correlation 
+  
+  # Relationship between weight and number of meals intake while controlling age
+  # http://www.css.cornell.edu/faculty/dgr2/teach/R/R_corregr.pdf
+  require(ggm)
+  require(ppcor)
+  require(psych)
+  
+
+```
+
+```{r}
+# short example
+    df <- data.frame(X = c(2,4,15,20), Y = c(1,2,3,4), Z = c(0,0,1,1))
+    mm1 <- lm(X~Z, df)
+    res1 <- mm1$residuals
+    mm2 <-  lm(Y~Z,df)
+    res2 <- mm2$residuals
+    cor(res1,res2)  # 0.9191 - partial correlation
+    cor(df$X, df$Y)  # 0.9695 - correlation
+  
+    corrplot(cor(df, method="pearson"), 
+             method="shade", shade.col=NA, tl.srt=45,
+             addCoef.col="black", order="AOE", type='lower')
+    
+    corrplot(ppcor::pcor(df, method="pearson")$estimate, 
+             method="shade", shade.col=NA, tl.srt=45,
+             addCoef.col="black", order="AOE", type='lower')
+    
+
+```
+
+```{r}
+# mtcars example
+    corrplot(cor(mtcars, method="pearson"), 
+             method="shade", shade.col=NA, tl.srt=45,
+             addCoef.col="black", order="AOE", type='lower')
+    
+    corrplot(ppcor::pcor(mtcars, method="pearson")$estimate, 
+             method="shade", shade.col=NA, tl.srt=45,
+             addCoef.col="black", order="AOE", type='lower')
+
+```
+```{r}
+  # no linear correlation
+  {
+    aux_ <- data.frame(dg=1:365, x=sin(1:365*pi/180), y=cos(1:365*pi/180))
+    cor(aux_$x, aux_$y)
+    plot(aux_$x, aux_$y)
+    aux_ <- data.frame(dg=1:365, x=sin(1:(365*2)*pi/180), y=sin(1:(365*2)*pi*2/180))
+    cor(aux_$x, aux_$y)
+    plot(aux_$x, aux_$y)
+  }
+
+```
+```{r}
+# >>> to do: marks, states hacer ejercicios
+  data(marks)  # algebra, statistics, mechanics, ...
+  states <- state.x77[,1:6]  # Population, Income, Murder, ...
+
+```
+
+
+```{r}
+library(devtools)
+  if(!require("ggbiplot", character.only = TRUE)) 
+    install_github("vqv/ggbiplot")
+
+```
+
+
+
+
+
+```{r}
+ 
+  # http://www.sthda.com/english/wiki/practical-guide-to-principal-component-methods-in-r
+  
+  library(ggbiplot)
+  require(factoextra)
+  # simulation
+  {
+    n <- 500
+    set.seed(1)
+    aux1_ <- rnorm(n, 15, 15)
+    aux2_ <- rnorm(n, 5, 1)
+    df <- data.frame(d=aux1_+3*aux2_+5, e=aux2_+2*aux1_+8)
+    ggplot(df, aes(x = d, y = e)) +geom_point(size=2, color='magenta')
+    cor(df$d, df$e)
+    
+    df.pca <- prcomp(df, scale=TRUE)
+    ggplot(df.pca$x %>% as.data.frame, aes(x = PC1, y = PC2)) +geom_point(size=2, color="blue")
+    cor(df.pca$x[,1], df.pca$x[,2]) %>% round(3)
+  }
+  
+
+```
+```{r}
+# wine 
+  {
+	#wine <- get(load("wine.rda"))
+  library(ggbiplot)
+  require(factoextra)
+    
+    wine.pca <- prcomp(wine, scale = TRUE)
+    ggbiplot(wine.pca, obs.scale = 1, var.scale = 1, # labels=rownames(wine),
+             groups = wine.class, ellipse = TRUE, circle = TRUE) +
+      scale_color_discrete(name = '') +
+      theme(legend.direction = 'horizontal', legend.position = 'top')
+    fviz_screeplot(wine.pca, addlabels = TRUE, ylim = c(0, 50))
+    get_eigenvalue(wine.pca)
+    
+  }
+  
+
+```
+```{r}
+# USArrests
+  {
+    # http://www.sthda.com/english/articles/31-principal-component-methods-in-r-practical-guide/118-principal-component-analysis-in-r-prcomp-vs-princomp/#package-for-pca-visualization
+    pca <- prcomp(USArrests, scale = TRUE)
+    fviz_pca_biplot(pca, repel = TRUE,
+                    col.var = "#2E9FDF", # Variables color
+                    col.ind = "#696969")  # Individuals color
+    plot(pca)
+  }
+
+```
+```{r}
+  # mtcars
+  {
+    # https://www.datacamp.com/community/tutorials/pca-analysis-r
+    mtcars.pca <- prcomp(mtcars[,-c(8,9)], center = TRUE,scale. = TRUE)
+    ggbiplot(mtcars.pca, labels=rownames(mtcars))
+    
+    mtcars.country <- c(rep("Japan", 3), rep("US",4), rep("Europe", 7),rep("US",3), 
+                        "Europe", rep("Japan", 3), rep("US",4), 
+                        rep("Europe", 3), "US", rep("Europe", 3))
+    ggbiplot(mtcars.pca, ellipse=TRUE,  labels=rownames(mtcars), groups=mtcars.country)
+    ggbiplot(mtcars.pca,ellipse=TRUE,choices=c(3,4),   
+             labels=rownames(mtcars), groups=mtcars.country)
+    
+  }
+
+```
+```{r}
+# Correspondence Analysis
+# http://www.sthda.com/english/articles/31-principal-component-methods-in-r-practical-guide/113-ca-correspondence-analysis-in-r-essentials/
+{
+  require(FactoMineR)
+  res.ca <- CA(housetasks, graph = FALSE)
+  fviz_screeplot(res.ca, addlabels = TRUE, ylim = c(0, 50))
+  fviz_ca_biplot(res.ca, repel = TRUE)
+  
+}
+```
+
+```{r}
+# other representation
+  chisq <- chisq.test(housetasks)
+  corrplot(chisq$residuals, is.cor = FALSE)
+
+```
+
+```{r}
+
+  require(cluster)
+  require(NbClust)
+  require(factoextra)
+  
+  # 1D, 2D
+  {
+      # 1D
+      library(mixtools)
+      wait = faithful$waiting
+      hist(wait, freq=F)
+      lines(density(wait))
+      
+      mixmdl = normalmixEM(wait)
+      plot(mixmdl,which=2)
+      lines(density(wait), lty=2, lwd=2)
+    
+      # 2D
+      n_clusters <- 2
+      km.res <- kmeans(faithful, n_clusters, nstart = 25)
+      table(km.res$cluster)
+      
+      plot(faithful, col = km.res$cluster, pch = 19, frame = FALSE,
+           main = "K-means with k = 2", cex=1)
+      points(km.res$centers, col = 5:7, pch = 8, cex = 3)
+  }
+  
+
+```
+```{r}
+  # distances
+  {
+    
+    # https://r-snippets.readthedocs.io/en/latest/real_analysis/metrics.html
+    # https://people.revoledu.com/kardi/tutorial/Similarity/index.html
+    # Mahalanobis distance: https://www.charlesgauvin.ca/post/distances-and-outlier-detection/
+    aux_ <- matrix(
+      c(1,4,8,9,2,3,
+      9,4,1,2,4,7,
+      1,7,9,3,2,8,
+      2,1,4,7,8,9,
+      1,4,8,3,9,2,
+      3,7,8,6,5,9), nrow=6,ncol=6)
+    dist(aux_, method = "minkowski", p = 2)
+    
+    # text
+    a <- c('potato', 'tomotto', 'chips', 'baloon')
+    b <- c('car', 'chips', 'bird', 'salt')
+    jaccard <- function(a, b) {
+      intersection = length(intersect(a, b))
+      union = length(a) + length(b) - intersection
+      return (intersection/union)
+    }
+    jaccard(a, b)
+  }
+
+```
+```{r}
+  # USArrest example
+  
+    # Number clustering with different methods
+    # http://www.sthda.com/english/wiki/determining-the-optimal-number-of-clusters-3-must-known-methods-unsupervised-machine-learning
+    set.seed(123)
+    gap_stat <- clusGap(scale(USArrests), FUN = kmeans, nstart = 25,
+                        K.max = 10, B = 50)
+    plot(gap_stat, frame = FALSE, xlab = "Number of clusters k")
+    
+    set.seed(123)
+    km.res <- kmeans(scale(USArrests), 4, nstart = 25)
+    fviz_cluster(km.res, USArrests) # frame.type = "t", frame.alpha = 0, frame.level = 0.7
+
+```
+```{r}
+    # k-means clustering is highly sensitive to outliers
+    # A more robust algorithm is provided by PAM algorithm (Partitioning Around Medoids) 
+    pam.res <- pam(scale(USArrests), 4)
+    fviz_cluster(pam.res)
+
+```
+
+```{r}
+    # Voronoi Diagrams
+    # http://flowingdata.com/2016/04/12/voronoi-diagram-and-delaunay-triangulation-in-r/
+    # http://letstalkdata.com/2014/05/creating-voronoi-diagrams-with-ggplot/
+    {
+      pca <- stats::prcomp(scale(USArrests), scale = FALSE, center = FALSE)
+      ind <- facto_summarize(pca, element = "ind", result = "coord",  axes = 1:2)
+      colnames(ind)[2:3] <- c("x", "y")
+      clustcent <- stats::aggregate(ind[, 2:3], by = 
+                                      list(cluster = km.res$cluster),  mean)
+      x<-clustcent$x
+      y<-clustcent$y
+      
+      voronoi<-deldir(x,y, rw=c(min(ind$x), max(ind$x), min(ind$y), max(ind$y)))
+      last_plot() + geom_segment(
+        aes(x = x1, y = y1, xend = x2, yend = y2), size = 1,
+        data = voronoi$dirsgs, linetype = 1, color= "#FFB958") 
+    }
+
+```
+```{r}
+# Hierarchical clustering 
+  {
+    data(nutrient, package="flexclust")
+    res.hc <- eclust(scale(nutrient), "hclust") # compute hclust
+    fviz_dend(res.hc, rect = TRUE) # dendrogam
+    
+    # cluster USArrestes
+    require(fastcluster)
+    require(graphics)
+    hc <- hclust(dist(USArrests), "ave")
+    plot(hc)
+    plot(hc, hang = -1)
+  }
+
+```
+
+```{r}
+  # >> ejercicio iris, animals, plantTraits
+  # https://people.sc.fsu.edu/~jburkardt/datasets/hartigan/hartigan.html  datasets
+  
+    df <- read.table('https://people.sc.fsu.edu/~jburkardt/datasets/hartigan/file02.txt',
+                     skip = 26, header=T, stringsAsFactors = FALSE)
+    {  
+      rownames(df) <- df$Name
+      df$Name <- NULL
+      res.hc <- eclust(scale(df), "hclust") # compute hclust
+      fviz_dend(res.hc, rect = TRUE) # dendrogam
+    }
+
+```
+```{r}
+#================= Textos =============================
+
+    # http://www.sthda.com/english/wiki/text-mining-and-word-cloud-fundamentals-in-r-5-simple-steps-you-should-know
+    
+    # Load
+    require("tm")
+    require("SnowballC")
+    require("wordcloud")
+    require("RColorBrewer")
+    
+    
+    require(cld3)
+    detect_language("this is a sample")
+    detect_language("esto es un ejemplo")
+    detect_language("Dies ist ein Beispiel")
+    
+    filePath <- "http://www.sthda.com/sthda/RDoc/example-files/martin-luther-king-i-have-a-dream-speech.txt"
+    text <- readLines(filePath)
+    # Load the data as a corpus
+    docs <- Corpus(VectorSource(text))
+    toSpace <- content_transformer(function (x , pattern ) gsub(pattern, " ", x))
+    docs <- tm_map(docs, toSpace, "/")
+    docs <- tm_map(docs, toSpace, "@")
+    docs <- tm_map(docs, toSpace, "\\|")
+
+```
+```{r}
+#==================== Association Rules ====================
+ # https://cran.r-project.org/web/packages/arules/vignettes/arules.pdf
+  # https://cran.r-project.org/web/packages/arulesViz/vignettes/arulesViz.pdf
+  # Rules Groceries
+  {
+    require("arules")
+    require("arulesViz")
+    
+    data("Groceries")
+    inspect(Groceries[1:3])
+    
+    (rules <- apriori(Groceries, 
+                      parameter=list(support=0.001, confidence=0.7)))
+
+    
+    inspect(head(sort(rules, by ="lift"),3))
+    {
+      length(Groceries) # Total: 98352
+      # Support: % rhs over Total
+      19/9835 # 0.001932 count / Total
+      # Covorage: lhs over Total
+      0.002135 ...   0.002135*9835 = 21 
+      # Confidence: 
+      0.001932/0.002135 o 19/21 # 0.9049 % Support / Covarage
+      itemFrequency(Groceries)["bottled beer"]*9835 # "bottled beer"  792
+
+      792/9835 = 0.08053 # "bottled beer" / total
+      0.9048/ 0.08053 # 11.24 lift Confidence / % Total"bottled beer" 
+    }
+    plot(rules, measure=c("support", "lift"), 
+         shading="confidence")
+    inspect(head(rules, by="lift", 2))
+    
+    (subrules <- rules[quality(rules)$confidence > 0.8])
+    plot(rules, method="grouped")
+    sel <- plot(rules, method="grouped", interactive=TRUE)
+  }
+  
+
+```
+
