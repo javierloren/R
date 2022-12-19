@@ -1,0 +1,102 @@
+---
+title: "Pràctica_videotutoría"
+author: "Javier de Castro Rodríguez"
+date: "2022-11-16"
+output: powerpoint_presentation
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+```{r}
+con<-file("datos/beer2.csv", "r")
+beer<- read.csv(con, row.names = 1)
+close(con)
+head(beer[,1:5])
+```
+
+```{r}
+library(dplyr)
+tail(select(beer, beer_name, review_overall))
+```
+
+```{r}
+tail(beer %>% select(beer_name,review_overall)) 
+```
+
+```{r}
+head(beer %>% filter(abv>15) %>% select(1:5))
+```
+
+```{r}
+beer %>%mutate(palateTasteRatio=(review_palate/review_taste)) %>% select(palateTasteRatio) %>% head()
+```
+
+```{r}
+beer %>% summarise(media=mean(review_overall), mediana=median(review_overall),
+variance=var(review_overall))
+```
+
+```{r}
+beer %>% group_by(review_overall, beer_style) %>% summarise(n=n())
+```
+
+```{r}
+beerList <- beer %>% 
+  distinct(beer_id, beer_name, brewer_id, beer_style, abv) %>% select(beer_id, beer_name, brewer_id, beer_style, abv)
+dim(beerList)[1]
+length(unique(beer$beer_id))
+```
+```{r}
+reviewList <- beer %>% select(profile_name, time,beer_id, review_aroma, review_overall, review_taste, review_appearance, review_palate, text)
+dim(beer)[1]
+dim(reviewList)[1]
+```
+
+```{r}
+beerJoin <- beerList %>% inner_join(reviewList)
+dim(beerJoin)
+dim(beer)
+```
+```{r}
+beerList %>% arrange(beer_id) %>% head()
+```
+
+```{r}
+reviewList %>% arrange(desc(time), review_overall) %>% head()
+```
+
+```{r}
+avgReview <- beer %>% group_by(beer_style) %>% 
+summarise (meanAppearance = mean(review_appearance),meanTaste = mean(review_taste),meanAroma = mean(review_aroma))
+
+```
+
+```{r}
+library(tidyr)
+library(data.table)
+avgReviewGather <- gather(data.table(avgReview), "reviewType", "rating", 2:4,  convert=TRUE) %>% arrange (rating)
+
+```
+
+```{r}
+avgReviewSpread <- spread(avgReviewGather, "reviewType", "rating")
+head(avgReviewSpread)
+```
+
+```{r}
+outputDir <- "datos/output"
+if (!file.exists(outputDir)) {
+  dir.create(outputDir)
+}
+dim(beerJoin)
+```
+
+```{r}
+write.table(beerJoin, file = paste(outputDir, "tidyBeer.csv", sep = "/"), sep = ";" , row.names = FALSE)
+```                                
+
+
+
+
