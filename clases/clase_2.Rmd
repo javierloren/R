@@ -33,6 +33,9 @@ head(beer)
 library(xlsx); 
 library(xlsxjars); 
 library(rJava);
+library (knitr);
+
+currentDir <- getwd()
 parentPath <- dirname(currentDir)
 anemonefish <- read.xlsx2(paste0(parentPath, file = "/datos/anemonefish.xls"), sheetIndex=1,startRow=14,endRow=40, row.names=NULL, colIndex=c(3:13),header=TRUE)
 kable(head(anemonefish[,1:4]))
