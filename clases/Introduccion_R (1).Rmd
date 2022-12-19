@@ -1,0 +1,1734 @@
+---
+title: "R. Introducción"
+author: "Isabel M. Izquierdo"
+framework: deckjs
+output: pdf_document
+hitheme: solarized_light
+job: Data Scientist
+knit: slidify::knit2slides
+mode: selfcontained
+highlighter: highlight.js
+subtitle: 28/10/2022
+deckjs:
+  theme: web-2.0
+widgets: []
+---
+
+## ÍNDICE (1/2)
+
+* 1. R. Quick intro
+* 2. RStudio 
+* 3. _Reproducible research_ con R
+* 4. Comenzando con R
+* 5. Escribiendo nuestras funciones R
+* 6. Métodos y clases en R
+* 7. _Lexical scoping_
+* 8. Tuneando nuestro código R
+* 10. Construyendo nuestros paquetes R
+* 11. Tipos de datos en R
+* 12. R: Leyendo y escribiendo datos
+* 13. R _Subsetting_
+
+© 2022 Isabel M. Izquierdo Martín
+
+Todos los derechos reservados
+
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+dir_trabajo <-  "/Users/imim/Library/CloudStorage/OneDrive-Telefonica/masters2/01_Introduccion_R_45_slides"
+```
+
+
+
+## ÍNDICE (2/2)
+
+* 14. _merge()_
+* 15. _order()_
+* 16. Funciones _*apply_
+* 17. Librería _{data.table}_
+* 18. Análisis exploratorio con R	
+* 19. Visualización de datos con R
+* 20. Construir Productos de Análisis de datos con R
+* 21. Bibliografía
+* 22. Links de interés	
+
+---
+
+# 1. R. Quick intro
+
+---
+
+# 2. RStudio
+
+---
+
+# 3. _Reproducible research_ con R
+
+---
+
+# 4. Comenzando con R
+
+---
+
+### Comprobar Versión de R
+```{r versioninfo, echo=TRUE, results='hide', message=FALSE, warning=FALSE, error=FALSE}
+sessionInfo()
+```
+### Ayuda
+```{r ayuda, echo=TRUE, results='hide', message=FALSE, warning=FALSE, error=FALSE}
+?merge
+help(package=dplyr)
+help(mean)
+? mean()
+help(package="datasets")
+library(help="datasets")
+args(sample)
+```
+
+---
+
+### Instalar y cargar paquetes R
+
+Para instalar una librería, por ejemplo la librería __knitr__ ejecutamos:
+```
+install.packages("knitr")
+```
+Para utilizar la librería, la cargamos (debemos cargarla en cada sesión):
+```
+library(knitr) 
+```
+En nuestro RStudio podemos ver qué librerías tenemos cargadas, en la pestaña "packages".
+
+### Comentarios
+
+Cualquier cosa a la derecha de # se considera un comentario.
+
+---
+
+### Asignación + Impresión en pantalla
+```{r asignacion, echo=TRUE, results='asis', message=FALSE, warning=FALSE, error=FALSE}
+x <- 1     # Todavía no se imprime nada
+print(x)  # Imprimir explícitamente
+x         # Auto-printing número
+palabra <- "hola"
+palabra  # Auto-printing string
+x <- 1:20  # Creando secuencia de enteros
+x          # Auto-printing secuencia
+```
+
+---
+
+### Tests lógicos en R
+
+| ?Comparison   |                    	|
+|-------------	|------------------------	|
+| <           	| Menor que              	|
+| >           	| Mayor que              	|
+| ==          	| Igual a                	|
+| <=          	| Menor o igual que      	|
+| !=          	| Distinto de            	|
+| %in%        	| Pertenencia a un grupo 	|
+| is.na       	| Comprueba si es NA     	|
+| !is.na      	| Comprueba si no es NA  	|
+
+ ******
+
+![alt text](./operadores_logicos.png)
+
+---
+
+### Missing values
+
+#### NA
+Los valores NA pertenecen a una clase: NA enteros, NA caracteres, ...
+```{r na, echo=TRUE, results='asis', message=FALSE, warning=FALSE, error=FALSE}
+vector1 = c(125.2, 225.4, 400.5, 338.3, NA)
+vector1
+is.na(vector1)
+
+vector2 = c(125.2, 225.4, 400.5, 338.3, NULL)
+is.na(vector2)
+```
+
+---
+
+### Eliminar NA
+```{r eliminarna, echo=TRUE, results='asis', message=FALSE, warning=FALSE, error=FALSE}
+x <- c(1, 2, NA, 4, NA, 5)
+missing <- is.na(x)
+x[!missing]
+```
+
+### Complete.cases
+```{r completecases, echo=TRUE, results='asis', message=FALSE, warning=FALSE, error=FALSE}
+missingEnx <- complete.cases(x)
+x[missingEnx]
+```
+
+### NaN
+ * NaN: Missing values en operaciones matemáticas
+ * En este caso se utiliza is.nan()
+ * Los valores NaN son a su vez NA (pero no al contrario)
+
+---
+
+## Distribuciones en R
+
+Las funciones de Distribución de Probabilidad, tienen funciones asociadas en R, precedidas por: 
+* d: Densidad
+* r: _Random number generation_
+* p: Distribución acumulativa
+* q: _Quantile function_
+
+Las más destacadas son:
+
+* __dbeta,dbinom, dcauchy, dchisq, dexp, df, dgamma, dgeom, dhyper, dlogis, dlnorm, dnbinom, dpois, dt, dunif, dweibull__
+* __dnorm__: Evaluar la Densidad de Probabilidad Normal (dada una media/desviación estándar) en un punto o vector de puntos
+* __rbeta, rbinom, rcauchy, rchisq, rexp, rf, rgamma, rgeom, rhyper, rlogis, rlnorm, rnbinom, rt, runif, rweibull__
+* __rpois__: Generación de variables aleatorias Poisson, dado un ratio
+
+---
+
+* __rnorm__: Generación variables aleatorias Normales, dada una media y desviación estándar
+
+```{r norm, echo=TRUE, results='asis', message=FALSE, warning=FALSE, error=FALSE}
+
+alturas = rnorm(10,mean=165,sd=3)
+alturas
+
+lanzaMonedas = rbinom(10,size=1,prob=0.5)
+lanzaMonedas
+```
+
+* __pnorm__: Evalúa la Función de Distribución acumulativa para una Distribución Normal
+
+---
+
+## Estructuras de control en R
+
+* __if, else__: testea una condición
+* __for__: ejecuta un bucle un número determinado de veces
+* __while__: ejecuta un bucle mientras una condición se cumple
+* __repeat__: ejecuta un bucle hasta que una condición se deje de cumplir
+* __break__: se sale de la ejecución de un bucle
+* __next__: se salta una iteración de un bucle
+* __return__: salida de una función
+
+---
+
+## Expresiones regulares en R
+ * grep(), grepl()
+ * regexpr()
+ * regexec()
+ * gregexpr()
+ * sub(), gsub()
+
+---
+
+# 5. Escribiendo nuestras funciones R
+
+https://cran.r-project.org/doc/manuals/R-intro.pdf >> Section 10
+
+---
+
+# 6. R: Métodos y clases
+
+https://cran.r-project.org/doc/manuals/R-intro.pdf >> Section 10.9
+
+---
+
+# 7. Lexical scoping en R
+
+---
+
+# 8. Tuneando nuestro código R
+
+---
+
+## system.time()
+* Toma cualquier expresión R como entrada, y devuelve el tiempo que ha tardado en evaluarla.
+* Devuelve un objeto de la clase __proc_time__
+  + _user time_
+  + _elapsed time_ 
+* Generalmente, _user time_ y _elapsed time_ son similares. Elapse será mayor si la CPU tiene muchos tiempos de espera, y puede ser menor, si la máquina tiene múltiples cores/procesadores y los usa en el procesamiento
+* Si hay un error, devuelve el tiempo hasta el momento del error
+
+---
+
+## RProf()
+
+__RProf()__ Tracea la pila de llamadas de funciones a intervalos regulares y calcula cuánto tiempo emplea cada función.
+
+Se puede usar __summaryRProf()__ para ver el resultado de RProf en forma de tabla, pudiendo escoger "by.total" o "by.self" para normalizar los porcentajes
+
+---
+
+# 9. R debugging
+
+---
+
+# 10. Construyendo nuestros paquetes R
+
+---
+
+# 11. Principales Tipos de datos en R
+
+---
+
+#### class() y unclass()
+ * class() nos devuelve el tipo del objeto que se le pase como argumento
+ * unclass() devuelve una copia de su argumento, pero con su atributo de tipo eliminado
+
+---
+
+#### Cadenas de caracteres, nchar(), substr()
+```{r caracter, echo=TRUE, results='hold', message=FALSE, warning=FALSE, error=FALSE}
+nombre <- "Isabel"
+class(nombre)
+nombre
+nchar(nombre)
+substr("Isabel M. Izquierdo",1,6)
+```
+
+---
+
+#### Cadenas de caracteres: paste(), paste0()
+
+```{r paste, echo=TRUE, results='hold', message=FALSE, warning=FALSE, error=FALSE}
+paste("Isabel M.", "Izquierdo") # separador por defecto " "
+paste0("Isa","bel") # no separador
+```
+
+---
+
+#### Librería _{stringr}_
+
+```{r stringr, echo=TRUE, results='hold', message=FALSE, warning=FALSE, error=FALSE}
+library(stringr)
+str_trim("     Isabel M. Izquierdo       ")
+```
+
+---
+
+#### Numéricos
+
+```{r numerico, echo=TRUE, results='hold', message=FALSE, warning=FALSE, error=FALSE}
+altura <- 1.67
+class(altura)
+altura
+```
+
+#### Enteros
+```{r enteros, echo=TRUE, results='hold', message=FALSE, warning=FALSE, error=FALSE}
+numeroHijos <- 3L
+class(numeroHijos)
+numeroHijos
+```
+
+---
+
+#### Lógicos
+```{r logicos, echo=TRUE, results='hold', message=FALSE, warning=FALSE, error=FALSE}
+dataScientist <- TRUE
+class(dataScientist)
+dataScientist
+```
+
+---
+
+### Fechas y Horas
+#### Para Fechas, la clase _Date_
+
+Las Fechas/Horas son almacenadas internamente como número de días/segundos desde 01/01/1970
+
+```{r fechashoras, echo=TRUE, results='hold', message=FALSE, warning=FALSE, error=FALSE}
+Sys.setenv(LANGUAGE="en", TZ="Europe/Berlin")
+x <- as.Date("1970-01-01")
+x
+unclass(x)  # Eliminando su tipo, 1970-01-01 es el número 0
+unclass(as.Date("1970-01-02")) # Eliminando su tipo, 1970-01-02, es el número 1
+```
+
+---
+
+#### Para Horas, las clases POSIXct y POSIXlt
+ * POSIXct es un entero, indicado para por ejemplo almacenar horas en un data.frame
+ * POSIXlt es una lista, para operar con día de la semana, día del año, mes, día del mes...
+   + weekdays: Nos da el día de la semana
+   + months: Nos da el nombre del mes
+   + quarters: Nos da el número de trimestre: Q1, Q2, Q3 o Q4
+ * Con las funciones as.POSIXlt o as.POSIXct convertimos un string a horas
+```{r stringtohoras, echo=TRUE, results='hold', message=FALSE, warning=FALSE, error=FALSE}
+x <- Sys.time()
+x
+p <- as.POSIXlt(x, tz="Europe/Madrid")
+names(unclass(p))
+p$sec
+```
+
+---
+
+ * Con la función __strptime()__ damos formato a las fechas (__?strptime__ para más info)
+ 
+```{r formatofechas, echo=TRUE, results='hold', message=FALSE, warning=FALSE, error=FALSE}
+datestring <- c("January 10, 2016 10:40", "December 9, 2015 10:10")
+x <- strptime(datestring, "%B %d, %Y %H:%M", tz="Europe/Madrid")
+x
+class(x)
+```
+
+---
+
+ * Suma, resta y comparaciones de fechas y horas
+ 
+```{r opefechas, echo=TRUE, results='asis', message=FALSE, warning=FALSE, error=FALSE}
+x <- as.Date("2015-12-31")
+y <- as.Date("2015-08-15")
+x-y
+x>y
+```
+
+---
+
+ * __format()__; __weekdays()__; __months()__
+   + %d = día (en número)
+   + %a = día de la semana abreviado
+   + %A = día de la semana
+   + %m = mes (en número)
+   + %b = mes abreviado
+   + %B = mes
+   + %y = año con 2 dígitos
+   + %Y = año con 4 dígitos
+```{r formatfechas, echo=TRUE, results='hold', message=FALSE, warning=FALSE, error=FALSE}
+ format(x,"%a %b %d")
+ weekdays(x)
+ months(x)
+```
+
+---
+
+ * Más fácil con la librería __{lubridate}__
+```{r flubridate, echo=TRUE, results='hold', message=FALSE, warning=FALSE, error=FALSE}
+ library(lubridate)
+ ymd("20160101")
+ mdy("01012016")
+```
+
+----
+
+### Vectores
+Conjunto de valores de la misma clase.
+
+Podemos crearlos con __c()__ o con __vector()__
+```{r vectores, echo=TRUE, results='asis', message=FALSE, warning=FALSE, error=FALSE}
+vEdades <- c(25, 32, 41, 40)
+vEdades
+vNombres <- c("Juan", "Rebeca", "Marta", "Pedro")
+vNombres
+x <- vector("numeric", length=10)
+```
+
+---
+
+### Listas
+Vector de valores que pueden ser de distintas clases
+```{r listas, echo=TRUE, results='asis', message=FALSE, warning=FALSE, error=FALSE}
+vEdades <- c(25, 32, 41, 40)
+vNombres <- c("Juan", "Rebeca", "Marta", "Pedro")
+miLista <- list(vEdades, vNombres)
+miLista
+```
+
+---
+
+### Matrices
+Vectores con múltiples dimesiones
+```{r matrices, echo=TRUE, results='hide', message=FALSE, warning=FALSE, error=FALSE, fig.width=5,fig.height=4}
+miMatriz <- matrix(c(1, 2, 3, 4), byrow=T, nrow=2)
+miMatriz
+```
+
+```{r matricesplot, echo=FALSE, results='markup', message=FALSE, warning=FALSE, error=FALSE,fig.width=5,fig.height=4}
+library(gplots)
+textplot(miMatriz)
+```
+
+---
+
+### Dataframes
+Múltiples vectores de posibles diferentes clases, de la misma longitud
+```{r dataframes, echo=TRUE, results='asis', message=FALSE, warning=FALSE, error=FALSE}
+miDataFrame <- data.frame(edades=vEdades, nombres=vNombres)
+```
+Para ver Dataframes en un visor estilo hoja de cálculo: __View()__
+
+--- 
+
+### Factores
+
+Variables cualitativas
+```{r factors, echo=TRUE, results='asis', message=FALSE, warning=FALSE, error=FALSE,cex=1.7, fig.width=15,fig.height=3}
+alturas <- c("alto", "bajo", "medio", "alto", "alto")
+fAlturas <- as.factor(alturas)
+textplot(fAlturas, cex=1.7, mar=c(0,0,0,0))
+textplot(levels(fAlturas), cex=1.7, mar=c(0,0,0,0))
+```
+
+---
+
+### sort()
+Para ordenar un vector o factor, en orden creciente o decreciente
+```
+edades <- studentMatPor$age
+edades[1:5]
+edadesReves <- sort(edades, decreasing=TRUE)
+edadesReves[1:5]
+```
+
+---
+
+### Reordenar los niveles de un factor
+```{r orderlevels1, echo=TRUE, results='hide', message=FALSE, warning=FALSE, error=FALSE,fig.width=25,fig.height=3}
+# Con "relevel", "bajo será el nivel de referencia en los modelos
+x1 <- relevel(fAlturas, ref="bajo")
+x1
+levels(x1)
+```
+
+```{r orderlevels1plot, echo=FALSE, results='hold', message=FALSE, warning=FALSE, error=FALSE,cex=2.5,fig.width=25,fig.height=4}
+x1 <- relevel(fAlturas, ref="bajo")
+textplot(x1, cex=2.5, mar=c(0,0,0,0))
+textplot(levels(x1), cex=2.5, mar=c(0,0,0,0))
+```
+
+```{r orderlevels2, echo=TRUE, results='hide', message=FALSE, warning=FALSE, error=FALSE,fig.width=25,fig.height=3}
+# Con "level" forzamos el orden deseado
+x2 <- factor(c("alto", "bajo", "medio", "alto", "alto"), levels=c("bajo", "medio", "alto"))
+x2
+levels(x2)
+```
+
+```{r orderlevels2plot, echo=FALSE, results='hold', message=FALSE, warning=FALSE, error=FALSE,cex=2.5,fig.width=25,fig.height=4}
+textplot(x2, cex=2.5, mar=c(0,0,0,0))
+textplot(levels(x2), cex=2.5, mar=c(0,0,0,0))
+```
+
+---
+
+## as.*() functions
+Fuerzan a un objeto a convertirse de una clase, a otra clase
+```{r asfunc, echo=TRUE, results='asis', message=FALSE, warning=FALSE, error=FALSE}
+x <- 0:5
+class(x)
+as.numeric(x)
+as.logical(x)
+as.character(x)
+as.complex(x)
+```
+
+---
+
+## dim() y attributes()
+El atributo "dimensión" es un vector de longitud dos (nrow, ncol)
+```{r dimatrib, echo=TRUE, results='asis', message=FALSE, warning=FALSE, error=FALSE}
+m <- matrix(nrow = 2, ncol = 3)
+m
+dim(m)
+attributes(m)
+dim
+```
+
+---
+
+## cbind (Column binding)
+```{r cbind, echo=TRUE, results='hide', message=FALSE, warning=FALSE, error=FALSE}
+x <- 1:5
+y <- 10:14
+cbind(x,y)
+```
+```{r cbindplot, echo=FALSE, results='hold', message=FALSE, warning=FALSE, error=FALSE,cex=2.5,fig.width=25,fig.height=4}
+textplot(cbind(x,y), cex=2.5, mar=c(0,0,0,0))
+```
+## rbind (Row binding)
+```{r rbind, echo=TRUE, results='hide', message=FALSE, warning=FALSE, error=FALSE}
+rbind(x,y)
+```
+
+```{r rbindplot, echo=FALSE, results='hold', message=FALSE, warning=FALSE, error=FALSE,cex=2.5,fig.width=25,fig.height=4}
+textplot(rbind(x,y), cex=2.5, mar=c(0,0,0,0))
+```
+
+---
+
+## names()
+```{r nombres1, echo=TRUE, results='hold', message=FALSE, warning=FALSE, error=FALSE,cex=2.5,fig.width=25,fig.height=4}
+x <- 1:3
+names(x)
+```
+
+```{r nombres2, echo=TRUE, results='hold', message=FALSE, warning=FALSE, error=FALSE,cex=2.5,fig.width=25,fig.height=4}
+names(x) <- c("nombre", "edad", "altura")
+names(x)
+```
+
+---
+
+## Nombres para listas
+```{r nombreslistas, echo=TRUE, results='asis', message=FALSE, warning=FALSE, error=FALSE}
+l <- list(nombre = "Pepe", edad = 35, altura = 1.85)
+l
+```
+
+## Nombres para Matrices
+```{r nombresmatrices, echo=TRUE, results='asis', message=FALSE, warning=FALSE, error=FALSE}
+m <- matrix(1:4, nrow = 2, ncol = 2)
+dimnames(m) <- list(c("a", "b"), c("c", "d"))
+textplot(kable(m))
+```
+
+---
+
+# 12. R: Leyendo y escribiendo datos
+
+---
+
+## Leer datos en R
+
+ * Consultar y establecer directorio de trabajo
+ * Comprobar y crear diretorio
+ * __download.file__, para descargar datasets de internet
+ * __read.table__, __read.csv__, __read.csv2__ para leer datos de tablas
+ * __read.xlsx__, __read.xlsx2__, para leer archivos xlsx
+ * __conexiones__ funciones para abrir conexiones a ficheros, urls, ...
+ * __readLines__, para leer líneas de un fichero de texto
+ * Librerías __RJSONIO__ y __jsonlite__, para leer ficheros JSON
+ * Librería __XML__, para leer y parsear ficheros XML y páginas
+ * Librería __httr__ para leer y parsear páginas web
+ * Librería __RMySQL__, para leer de mySQL
+ * Leer imágenes
+ * Leer datos GIS
+ * Leer música
+ * Leer código y objetos R
+
+---
+
+### Establecer y obtener directorio de trabajo
+```{r dirtrabajo, echo=TRUE, results='asis', message=FALSE, warning=FALSE, error=FALSE}
+getwd()
+setwd(dir_trabajo)
+getwd()
+```
+
+---
+
+### Comprobar y crear directorio
+* __file.exists__("NombreDirectorio"): Comprueba si existe el directorio o fichero
+* __dir.create__("NombreDirectorio"): Crea el directorio si no existe
+
+```{r creardir, echo=TRUE, results='asis', message=FALSE, warning=FALSE, error=FALSE}
+if (!file.exists("../datos")) {
+                 dir.create("../datos")
+}
+```
+
+---
+
+### download.file()
+
+Para obtener datasets de Internet.
+Importante para que el código sea reproducible, almacenar además la fecha de la descarga.
+
+En Mac, si es https, method="curl"
+
+```{r downloadfile, echo=TRUE, results='asis', message=FALSE, warning=FALSE, error=FALSE}
+fileUrl <- "https://archive.ics.uci.edu/ml/machine-learning-databases/00320/student.zip"
+download.file(fileUrl,destfile="../datos/student.zip", method="curl")
+rm(fileUrl)
+unzip("../datos/student.zip", exdir="../datos")
+list.files("../datos")
+fechaDescarga <- date()
+fechaDescarga
+```
+
+---
+
+### {downloader}: wrapper para Windows
+```
+library(downloader)
+fileUrl <- "https://archive.ics.uci.edu/ml/machine-learning-databases/00320/student.zip"
+download(fileUrl, "../datos/student.zip", mode= "wb")
+unzip("../datos/student.zip", overwrite = TRUE, exdir="../datos")
+list.files("../datos")
+rm(fileUrl)
+fechaDescarga <- date()
+fechaDescarga
+```
+
+---
+
+### read.table()
+Argumentos principales:
+* __file__: Nombre de fichero o conexión
+* __header__: Lógico, indica si el ficheo tiene o no cabecera
+* __row_names__: Vector de nombres para las filas, o "NULL"
+* __sep__: String, separador de columnas
+* __colClasses__: Vector de caracteres, que indica la clase de cada columna
+* __quote__: quote="", para evitar errores si tenemos " en valores de los datos
+* __comment.char__: String que indica el carácter usado para comentarios
+* __na.strings__: caracter que se debe interpretar como missing value
+* __stringsAsFactors__: Lógico, indica si las variables alfanuméricas deben considerarse factores
+* __skip__: Número de líneas a saltarse, contando desde el principio
+* __nrows__: Número de filas. Para ficheros grandes, hará que la lectura sea más rápida
+
+---
+
+```{r readtable, echo=TRUE, results='asis', message=FALSE, warning=FALSE, error=TRUE}
+library(knitr) # Para la generación de estas slides con R markdown
+setwd(dir_trabajo)
+studentMat <- read.table("../datos/student-mat.csv", 
+                         row.names=NULL, sep=";", header=TRUE)
+kable(head(studentMat[,1:5]))
+# kable imprime los resultados en forma tabulada en las slides
+# head muestra las primeras filas
+```
+
+---
+
+### Conexiones
+
+Hay varias funciones que crean conexiones
+
+El listado completo: __?connections__
+
+Las más utilizadas:
+* file
+* url
+* gzfile
+* bzfile
+
+Después de utilizar una conexión, hay que cerrarla con close()
+
+---
+
+### read.csv() y read.csv2()
+* __sep__="," por defecto en read.csv
+* __sep__=";" por defecto en read.csv2
+* __header__=TRUE por defecto en ambos
+
+```{r conreadcsv2, echo=TRUE, results='hide', message=FALSE, warning=FALSE, error=FALSE}
+setwd(dir_trabajo)
+con <- file("../datos/student-por.csv","r")
+studentPor <- read.csv2(con)
+close(con)
+head(studentPor[,1:5])
+```
+
+```{r conreadcsv2plot, echo=FALSE, results='asis', message=FALSE, warning=FALSE, error=FALSE,fig.width=5,fig.height=4}
+textplot(kable(head(studentPor[,1:5])))
+```
+
+---
+
+### Librería _{xlsx}_: read.xls() y read.xls2()
+* __sheetIndex__, para indicarle las hojas a cargar (ej 1)
+* __rowIndex__, para indicarle las filas a cargar (ej 1:5)
+* __colIndex__, para indicarle las columas a cargar (ej 2:6) 
+* _read.xlsx2_ algo más rápido
+
+Se recomienda utilizar .CSV o .tab o .txt para facilitar la distribución.
+
+---
+
+### readLines()
+* Lee líneas de texto desde una conexión
+* La conexión puede ser un fichero local
+
+---
+
+### Librerías _{RJSONIO}_ y _{jsonlite}_
+JSON: Javascript Object Notation
+Extendido su uso para datos de APIs
+
+```
+library(jsonlite)
+miURL <- "htpps://xxx"
+misDatosJson <- fromJSON(miURL)
+names(misDatosJson)
+```
+
+---
+
+### Librería _{XML}_
+ Para leer y parsear ficheros XML
+
+```
+library(XML)_
+miURL <- "htpps://xxx"
+miDocXML <- xmlTreeParse(miURL,useInternal=TRUE)
+nodoRaiz <- xmlRoot(miDocXML)
+xmlName(nodoRaiz)
+xmlSApply(nodoRaiz,xmlValue)
+```
+
+---
+
+### Librería _{httr}_
+
+ La librería __httr__ nos permite leer y parsear páginas web con funciones como:
+ * GET()
+ * content()
+ * htmlParse()
+ * handle()
+
+---
+
+### Librería _{RMySQL}_
+ 
+ Para importar datos de mySQL
+
+---
+
+### APIS
+
+ * __twitter__: twitteR
+ * __figshare__: rfigshare
+ * __PLoS__: rplos
+ * __rOpenSci__
+ * __Facebook__: RFacebook
+ * __Google maps__: RGoogleMaps
+
+---
+
+### Leer imágenes
+Disponibles en https://cran.r-project.org/web/packages
+* jpeg
+* readbitmap
+* png
+* EBImage (Bioconductor): http://bioconductor.org/packages/release/bioc/html/EBImage.html
+
+---
+
+### Leer música
+
+* tuneR (disponible en https://cran.r-project.org/web/packages)
+* seewave: http://rug.mnhn.fr/seewave/
+
+---
+
+### Leer datos GIS
+
+Disponibles en https://cran.r-project.org/web/packages
+* rdgal
+* rgeos
+* raster
+
+---
+
+### Leer código y objetos R
+ 
+ * __source()__, para leer de ficheros fuente R (los parsea y evalúa las expresiones, inverso de dump())
+ * __dget()__, para leer código R de ficheros ASCII (inverso de dput)
+ * __load()__, para leer de espacios de trabajo guardados
+ * __unserialize()__, para leer objetos R individuales en formato binario
+
+---
+
+### Limpiar espacio de trabajo 
+ Antes de cargar objetos en el espacio de trabajo, puede que queramos limpiarlo. Para ello, ejecutamos:
+```
+    rm(list=ls())
+```
+
+Y Comprobamos:
+
+```
+    ls()
+```
+
+---
+
+## Escribir datos desde R
+
+* __write.table__
+* Librería __RJSONIO__
+* __save__, __save.image__
+
+---
+
+### write.table
+
+Inverso de read.table
+
+```{r writetable, echo=TRUE, results='hide', message=TRUE, warning=TRUE, error=FALSE}
+setwd(dir_trabajo)
+if (!file.exists("../datos/output")) {
+                 dir.create("../datos/output")
+                 }
+tmpStudent <- studentMat[,-1]
+write.table(tmpStudent,file="../datos/output/StudentMatModif.csv", sep=";")
+tmpStudentRead <- read.csv2("../datos/output/StudentMatModif.csv")
+head(tmpStudentRead)[,1:5]
+```
+
+```{r writetableplot, echo=FALSE, results='markup', message=TRUE, warning=TRUE, error=FALSE,fig.width=5,fig.height=4}
+textplot(kable(head(tmpStudentRead)[,1:5]))
+```
+
+---
+
+### Librería _{RJSONIO}_
+
+Para exportar data.frames a JSON
+```
+library(RJSONIO)
+miJson <- toJSON(iris, pretty=TRUE)
+cat(miJson)
+```
+
+---
+
+### save(), save.image()
+ * save() salva un objeto R en un fichero en disco (habitualmente ext __.Rda__)
+ * save.image() salva el espacio de trabajo entero en disco
+
+---
+
+### Escribir en ficheros datos y código R
+
+ * __dump()__, se le pasa un vector de nombres de objetos R, y los guarda en formato texto, inverso de source())
+ * __dput()__, para escribir código R en ficheros ASCII (inverso de dget)
+ * __serialize()__, para escribir objetos R individuales en formato binario
+
+---
+
+# 13. R Subsetting
+
+---
+
+## Subsetting
+Operaciones para extraer subconjuntos de objetos R.
+ * __[__ devuelve un objeto de la misma clase que el original. Puede seleccionar más de un elemento.
+ * __[[__ se usa para extraer un elemento de una lista o data.frame. La clase del objeto que devuelve no tiene por qué ser lista o data.frame
+ * __$__ se usa para extraer un elemento de una lista o data.frame, usando su nombre. La clase del objeto que devuelve no tiene por qué ser lista o data.frame
+ * __subset()__: Similar a "[". Se usa cuando se requiere interactividad. En el resto de casos, se recomienda "[" y los otros estilos de subsetting
+
+---
+
+### Operador [
+
+```{r subsetting1, echo=TRUE, results='asis', message=FALSE, warning=FALSE, error=FALSE}
+valturas = c(180.5, 175.0, 192.4, 180.8)
+vnombres = c("Pepe", "Jaime", "David", "Tomas")
+valturas[1]
+valturas[c(1, 2, 4)]
+```
+
+```{r subsetting2, echo=TRUE, results='hide', message=FALSE, warning=FALSE, error=FALSE}
+miDataFrame = data.frame(heights = valturas, nombres = vnombres)
+miDataFrame[1, 1:2] # Muestro la primera fila y las dos primeras columnas
+```
+
+```{r subsetting2plot, echo=FALSE, results='asis', message=FALSE, warning=FALSE, error=FALSE}
+valturas = c(180.5, 175.0, 192.4, 180.8)
+vnombres = c("Pepe", "Jaime", "David", "Tomas")
+miDataFrame = data.frame(heights = valturas, nombres = vnombres)
+textplot(kable(miDataFrame[1, 1:2]))
+```
+
+---
+
+### Operador [[
+Muy útil en modelos, cuando queremos que una variable tome como nombre, cada nombre de las columnas de un data.frame, o de los elementos de una lista
+```{r subsetting4, echo=TRUE, results='asis', message=FALSE, warning=FALSE, error=FALSE}
+x <- list(enteros = 1:4, num = 0.6, nombre = "Pepe")
+name <- "enteros"
+x[[name]]
+```
+
+---
+
+### Operador $ 
+
+```{r subsetting5, echo=TRUE, results='asis', message=FALSE, warning=FALSE, error=FALSE}
+x$numbers ## El elemento "numbers" no existe
+x$num
+```
+
+```{r subsetting3, echo=TRUE, results='hide', message=FALSE, warning=FALSE, error=FALSE}
+miDataFrame$nombres
+```
+
+```{r subsetting3plot, echo=FALSE, results='asis', message=FALSE, warning=FALSE, error=FALSE}
+valturas = c(180.5, 175.0, 192.4, 180.8)
+vnombres = c("Pepe", "Jaime", "David", "Tomas")
+miDataFrame = data.frame(heights = valturas, nombres = vnombres)
+textplot(kable(miDataFrame$nombres), cex=2.1)
+```
+
+---
+
+### Logical subsetting
+```{r logsubsetting, echo=TRUE, results='asis', message=FALSE, warning=FALSE, error=FALSE}
+x <- c("a", "b", "c", "c", "d", "a")
+mayoresA <- x > "a"
+mayoresA
+x[mayoresA]
+```
+
+---
+
+### Subsetting matrices
+Se utilizan índices, pudiendo faltar alguno de ellos
+```{r subsettingmat, echo=TRUE, results='asis', message=FALSE, warning=FALSE, error=FALSE}
+x <- matrix(1:6, 2, 3)
+x[1, 2]
+x[2, 1]
+x[1, ]
+x[, 2]
+```
+
+---
+
+### Subsetting lists
+```{r subsettinglist, echo=TRUE, results='asis', message=FALSE, warning=FALSE, error=FALSE}
+x <- list(enteros = 1:4, floats = 0.6)
+x[1]
+x[[1]]
+x$floats
+x[["floats"]]
+x["floats"]
+```
+
+---
+
+### Subsetting elementos anidados de una lista
+```{r subsettinganid, echo=TRUE, results='asis', message=FALSE, warning=FALSE, error=FALSE}
+x <- list(a = list(10, 12, 14), b = c(3.14, 2.81))
+x[[c(1, 3)]]
+x[[1]][[3]]
+x[[c(2, 1)]]
+```
+
+---
+
+# 14.  merge()
+
+---
+
+## merge()
+Esta función sirve para "mezclar" data.frames
+Sus parámetros principales son:
+* __x, y__: Los data.frames a "mezclar"
+* __by__, __by.x__, __by.y__: Especifican las columnas para el merging
+* __all.x__: Incluir todas las filas de x, aunque no tenga correspondencia en y
+* __all.y__: Incluir todas las filas de y, aunque no tenga correspondencia en x
+* __all__: all.x & all.y
+* __sort__: Valor lógico que indica si se deben ordenar las columnas resultantes
+* __suffixes__: vector de 2 strings, que serán los sufijos de las columnas que vienen de x y las columnas que vienen de y
+
+---
+
+* __Ejercicio:__
+
+Crea un nuevo data.frame de nombre "studentMatPor"
+
+que tenga los 382 estudiantes que han estudiado ambas materias.
+
+Esos estudiantes se identifican por tener los mismos valores
+
+en los data.frames "studentMat" y "studentPor"
+
+para estos atributos:
+
+"school","sex","age","address","famsize","Pstatus","Medu","Fedu",
+"Mjob","Fjob",reason","nursery","internet"
+
+---
+
+* __Solución:__
+```{r merge, echo=TRUE, results='asis', message=FALSE, warning=FALSE, error=FALSE}
+studentMatPor <- merge(studentMat,studentPor,
+                       by=c("school","sex","age",
+                            "address","famsize",
+                            "Pstatus","Medu",
+                            "Fedu","Mjob",
+                            "Fjob","reason",
+                            "nursery","internet"), 
+                       all=FALSE,
+                       suffixes=c("mat","por"))
+dim(studentMatPor)[1]
+```
+
+---
+
+# 15. order()
+
+---
+
+## order()
+
+* Con __order()__ podemos ordenar por más de una variable (por ej. un data.frame), pudiendo escoger para cada variable, orden creciente o decreciente
+
+* Para indicar "decreciente"
+  + Variables numéricas: __-__
+  + Factores: __-xtfrm()__
+
+---
+
+* __Ejercicio:__
+
+Crea un data.frame de nombre "studentMatPor2",
+
+que sea copia de "studentMatPor",
+
+pero ordenado en primer lugar __por orden creciente__ de la variable "age",
+
+y en segundo lugar __por orden también creciente__ de la variable "mjob"
+
+---
+
+* __Solución:__
+
+Muestro las primeras 10 filas y 9 columnas del DF:
+
+```{r order1, echo=TRUE, results='hide', message=FALSE, warning=FALSE, error=FALSE}
+studentMatPor [1:10,1:9]
+```
+
+```{r order1plot, echo=FALSE, results='markup', message=FALSE, warning=FALSE, error=FALSE, fig.width=9,fig.height=6}
+library(gplots)
+textplot(kable(studentMatPor [1:10,1:9]), cex=1.1, fixed.width = TRUE, mar=c(0,0,0,0))
+```
+
+---
+
+```{r order1b, echo=TRUE, results='hide', message=FALSE, warning=FALSE, error=FALSE}
+studentMatPor2 <- studentMatPor[order(
+        studentMatPor[,3],
+        xtfrm(studentMatPor[,9])), ]
+studentMatPor2[1:10,1:9]
+```
+
+```{r order1bplot, echo=FALSE, results='markup', message=FALSE, warning=FALSE, error=FALSE,fig.width=9,fig.height=7}
+studentMatPor2Plot <- studentMatPor2[1:10,1:9]
+row.names(studentMatPor2Plot) <- NULL
+textplot(kable(studentMatPor2Plot, cex=1.1, fixed.width = TRUE, mar=c(0,0,0,0)))
+```
+
+---
+
+* __Ejercicio:__
+
+Ahora ordena el data.frame "studentMatPor2" del ejercicio anterior:
+
+ + primero __en orden decreciente de la variable "age"__,
+
+ + y luego __en orden decreciente de la variable "famsize"__.
+
+_¿Encuentras algún problema con la variable "famsize"?_
+
+_¿Cómo lo solucionarías?_
+
+---
+
+famsize: "LE3" - less or equal to 3 y "GT3" - greater than 3 >> Semánticamente, LE3<GT3.
+
+Por orden alfabético, _order()_ considera GT3 < LE3, así que para conseguir orden decreciente "semántico", utilizo xtfrm (= orden alfabético creciente)
+```{r order2, echo=TRUE, results='hide', message=FALSE, warning=FALSE, error=FALSE}
+studentMatPor2 <- studentMatPor[order(
+        -studentMatPor[,3],
+        xtfrm(studentMatPor[,5])), ]
+row.names(studentMatPor2) <- NULL
+studentMatPor2[1:20,1:5]
+```
+
+```{r order2plot, echo=FALSE, results='asis', message=FALSE, warning=FALSE, error=FALSE, fig.width=5, fig.height=8}
+studentMatPor2Plot <- studentMatPor2[1:20,1:5]
+row.names(studentMatPor2) <- NULL
+textplot(kable(studentMatPor2Plot[1:20,1:5]))
+```
+
+---
+
+# 16. Funciones *apply
+
+---
+
+## *apply()
+En R, para iterarar sobre listas, en lugar de bucles for, while, y sobre todo en procesos de análisis de datos, cuando no sólo programamos, sino que realizamos una tarea interactiva, en línea de comandos o RStudio, utilizamos las funciones __*apply__:
+
+* __lapply__: Itera sobre una lista y evalúa una función en cada elemento
+* __sapply__: Igual que lapply, pero intenta simplificar el resultado
+* __apply__: Aplica una función sobre los márgenes de un array
+* __tapply__: Aplica una función sobre subconjuntos de un vector
+* __mapply__: Versión "multivariable" de __lapply__
+
+Adicionalmente, la función __split__ se usa con frecuencia con lapply.
+
+---
+
+## lapply()
+__lapply__ devuelve siempre una lista
+```{r lapply1, echo=TRUE, results='hold', message=FALSE, warning=FALSE, error=FALSE,fig.width=25,fig.height=3}
+miLista <- list(edad=c(25,30,43,52,24),
+                altura=c(1.85,1.65,1.56,1.77))
+# Funcion = media aritmética
+lapply(miLista,mean)
+```
+
+---
+
+## lapply() (cont)
+
+```{r lapply2, echo=TRUE, results='hide', message=FALSE, warning=FALSE, error=FALSE,fig.width=25,fig.height=3}
+miListaMatriz <- list(m1=matrix(1:3,2,3), m2=matrix(1:3,2,3))
+miListaMatriz
+```
+
+```{r lapply2plot, echo=FALSE, results='hide', message=FALSE, warning=FALSE, error=FALSE,fig.width=25,fig.height=5}
+library(knitr)
+miListaMatriz <- list(m1=matrix(1:3,2,3), m2=matrix(1:3,2,3))
+textplot(kable(miListaMatriz),cex=2.3)
+```
+
+```{r lapply3anonima, echo=TRUE, results='hide', message=FALSE, warning=FALSE, error=FALSE,fig.width=25,fig.height=3}
+# Funcion = anónima, que toma la primera columna de cada matriz
+lapply(miListaMatriz,function(x)x[,1])
+```
+
+```{r lapply3anonimaplot, echo=FALSE, results='hold', message=FALSE, warning=FALSE, error=FALSE,fig.width=25,fig.height=5}
+# Funcion = anónima, que toma la primera columna de cada matriz
+miListaMatriz <- list(m1=matrix(1:3,2,3), m2=matrix(1:3,2,3))
+textplot(kable(lapply(miListaMatriz,function(x)x[,1])),cex=2.3)
+```
+
+---
+
+## sapply()
+
+* Si el resultado es una lista con todos los elementos de longitud 1, devuelve un vector
+* Si el resultado es una lista donde todos los elementos tienen la misma longitud, pero mayor que 1, devuelve una matriz
+* Si no puede simplificar el resultado, devuelve una lista
+```{r sapply, echo=TRUE, results='hide', message=FALSE, warning=FALSE, error=FALSE,fig.width=25,fig.height=3}
+miLista <- list(edad=c(25,30,43,52,24),
+                altura=c(1.85,1.65,1.56,1.77))
+sapply(miLista,mean)
+```
+
+```{r sapplyplot, echo=FALSE, results='hold', message=FALSE, warning=FALSE, error=FALSE,fig.width=25,fig.height=3}
+miLista <- list(edad=c(25,30,43,52,24),
+                altura=c(1.85,1.65,1.56,1.77))
+textplot(kable(sapply(miLista,mean),cex=2))
+```
+
+---
+
+## apply()
+Sobre todo se usa para aplicar una función sobre las columnas o sobre las filas de una matriz.
+Incluso hay shortcuts para las formas más usadas:
+ * rowSums = apply(x, 1, sum)
+ * rowMeans = apply(x, 1, mean)
+ * colSums = apply(x, 2, sum)
+ * colMeans = apply(x, 2, mean)
+
+---
+
+## tapply()
+Aplica la función sobre subconjuntos de un vector, y se le puede especificar si queremos que simplifique o no los resultados
+
+* __Ejercicio__:
+
+Entre los estudiantes de matemáticas:
+
+¿quiénes suman en total más ausencias,
+
+los que pagan extraescolares, 
+
+o los que no?
+
+---
+
+* __Solución__:
+
+```{r tapply, echo=TRUE, results='hide', message=FALSE, warning=FALSE, error=FALSE,fig.width=25,fig.height=3}
+tapply(studentMat$absences,studentMat$paid,sum)
+```
+
+```{r tapplyplot, echo=FALSE, results='hold', message=FALSE, warning=FALSE,fig.width=25,fig.height=4}
+textplot(kable(tapply(studentMat$absences,studentMat$paid,sum),cex=2))
+```
+
+---
+
+## mapply()
+Su propósito es "vectorizar" argumentos para una función que habitualmente no acepta vectores como argumentos. También se le puede indicar si queremos que simplifique o no los resultados. Ejemplo [*]:
+```{r mapply, echo=TRUE, results='hide', message=FALSE, warning=FALSE, error=FALSE,fig.width=30,fig.height=3}
+q1 <- matrix(c(rep(1, 4), rep(2, 4), rep(3, 4), rep(4, 4)),4,4)
+q1
+```
+
+```{r mapplyplot, echo=FALSE, results='asis', message=FALSE, warning=FALSE, error=FALSE, fig.width=35, fig.height=4}
+library(gplots) # Para pintar la matrix en texto
+textplot(q1,cex=2.5)
+```
+
+```{r mapply2, echo=TRUE, results='hide', message=FALSE, warning=FALSE, error=FALSE,fig.width=35,fig.height=3}
+# Con mapply:
+q2 <- mapply(rep,1:4,4)
+q2
+```
+
+```{r mapply2plot, echo=FALSE, results='asis', message=FALSE, warning=FALSE, error=FALSE,fig.width=35, fig.height=4}
+textplot(q2,cex=2.5)
+```
+[*]_Fuente: https://www.datacamp.com/community/tutorials/r-tutorial-apply-family_
+
+---
+
+## Split
+Toma como argumento un vector o data.frame y lo divide en grupos determinados por un factor o lista de factores.
+
+* __Ejercicio__: Con __split()__ y __sapply()__, calcula la media de graduación final de los alumnos de matemáticas, por cada posible profesión paterna.
+
+---
+
+* __Solución__:
+```{r split, echo=TRUE, results='hide', message=FALSE, warning=FALSE, error=FALSE}
+divideFjob <- split(studentMat, studentMat$Fjob)
+sapply(divideFjob, function(x) mean(x$G3))
+```
+
+```{r splitplot, echo=FALSE, results='asis', message=FALSE, warning=FALSE, error=FALSE, fig.width=12, fig.height=3}
+#textplot(sapply(divideFjob, function(x) mean(x$G3)), mar=c(0,0,0,0),
+#         cex=1.2,fixed.width=TRUE)
+textplot(sapply(divideFjob, function(x) mean(x$G3)), mar=c(0,0,0,0),
+         cex=1.2)
+```
+
+---
+
+# 17. Librería {data.table}
+
+---
+
+## _{data.table}_
+
+Acepta las mismas funciones que data.frame, pero es mucho más rápido, especialmente en subsetting, merges y actualizaciones
+* __tables()__: Para ver todas las data.tables en memoria
+* __Subsetting DT__:
+
+__En un DF, se puede seleccionar columnas de este modo:__
+
+```
+nombre.df[nombre.df$campo.df == "valor, c("columna1", "columna2", "columna3")]
+```
+
+__Para hacer esto mismo en un DT:__
+
+```
+nombre.dt[nombre.dt$campo.dt == "valor, c("columna1", "columna2", "columna3"), with = F]
+```
+
+---
+
+  + Pero es más habitual trabajar con "list": 
+```
+nombre.dt[nombre.dt$campo.dt == "valor", list(columna1,columna2,columna3)]
+```
+
+  + La ventaja de la lista es que puedo cambiar los nombres de las columnas al mismo tiempo:
+```
+nombre.dt[nombre.dt$campo.dt == "valor", list(new_name_col1=columna1,new_name_col2=columna2,new_name_col3=columna3)]
+```
+
+  + Se pueden también en el momento crear nuevas columnas, que por ejemplo sean "paste" de otras columnas, o que cojan datos de fuera.
+
+---
+
+* __Crear variables en DT con expresiones__:
+ Lo que está a la derecha de la coma, cuando se aplica subsetting en una DT, es una _expresión_
+ 
+ __Ejemplos__:
+```
+DT[,list(mean(x),median(y))]
+DT[,table(x)]
+DT[,x:=20]
+DT[,x:=romantic=="TRUE""]
+DT[,r:={x<-y*z, m<-y^2}]
+```
+
+---
+ 
+### merge() DT
+```{r mergedt, echo=TRUE, results='hide', message=FALSE, warning=FALSE, error=FALSE}
+library(data.table)
+miDt1 <- data.table(
+        nombre=c("Juan","Rebeca","Pablo","Ana"), 
+        edades=c(25,30,22,29))
+miDt2 <- data.table(
+        nombre=c("Juan","Rebeca","Pedro","Ana", "Juanjo"),
+        alturas=c(1.65,1.70,1.68,1.85,1.77))
+setkey(miDt1, nombre)
+setkey(miDt2, nombre)
+merge(miDt1,miDt2)
+```
+
+```{r mergedtplot, echo=FALSE, results='asis', message=FALSE, warning=FALSE, error=FALSE, fig.width=8, fig.height=5}
+textplot(kable(merge(miDt1,miDt2)))
+```
+
+---
+
+* __Ejercicio__:
+
+Instala la librería __{data.table}__.
+
+Crea DT en lugar de DF para los datos de los estudiantes de matemáticas y portugués
+
+y repite todos los ejercicios de esta sesión con DT en vez de DF.
+
+---
+
+# 18. Análisis exploratorio con R
+
+---
+
+## Análisis exploratorio con R
+* _Summarizing_
+* Gráficos exploratorios
+* _Clustering_
+
+---
+
+### Summarizing
+Empezaremos nuestro análisis exploratorio  (_summarizing_), utilizando este tipo de funciones para describir los datos (_las hemos ido mencionando en los apartados previos_):
+
+* names()
+* head()
+* tail()
+* nrow(), ncol()
+* quantile()
+* summary()
+* str()
+* object.size()
+* class()
+* unique()
+* length()
+* rowSums(), rowMeans(), colSums(), colMeans()
+* table()
+* xtabs()
+
+---
+
+* __any()__, __all()__
+
+```{r anyall, echo=TRUE, results='asis', message=FALSE, warning=FALSE, error=FALSE}
+any(studentMat$G3 == 20)
+all(studentMat$G3 > 0)
+```
+
+---
+
+### Gráficos exploratorios
+Probablemente los gráficos exploratorios no irán en el informe final del análisis, o no todos, así que:
+* Suelen generarse muchos, es para nuestro entendimiento de los datos
+* Se hacen rápidamente, no se presta especial atención a los colores, estilos, ...
+* Los ejes y las leyendas pueden no estar demasiados claros
+
+Sin embargo, hay que procurar:
+* Usar escalas comunes para diferentes gráficos
+* Comparar gráficos "por posición" y no "por ángulos"
+* No usar gráficos de tarta (ángulos)
+* No usar Diagramas de barra 3D
+
+Los gráficos exploratorios más utilizados son:
+* boxplots
+* barplots
+* histograms (+ abline())
+* density plots
+* scatter plots
+* Regresión lineal con abline()
+* heatmaps (image(){graphics})
+
+---
+
+Podemos usar 3 tipos de librerías en R para estos gráficos:
+* __Sistema "básico"__
+  + __{graphics}__: plot, hist, boxplot, barplot, ...
+  + __{grDevices}__: X11, PDF, PostScrip, PNG, ...
+* __Sistema "lattice"__:
+  + __{lattice}__: xyplot, bwplot, levelplot
+  + __{grid}__: Para manipular y customizar el output de {lattice}
+* __{ggplot2}__: _"Grammar of Graphics"_
+
+---
+
+## graphics >> lattice >> ggplot2
+
+Un ejemplo de gráfico básico con __{graphics}__:
+
+```{r basico , echo=TRUE, results='asis', message=FALSE, warning=FALSE, error=FALSE, fig.width=20, fig.height=10}
+par(mfrow = c(1, 2), mar = c(5, 4, 2, 1), cex=2)
+with(subset(studentMat, school == "GP"),
+     plot(absences, G3, main = "GP", pch=20))
+with(subset(studentMat, school == "MS"),
+     plot(absences, G3, main = "MS", pch=20))
+```
+
+---
+
+El mismo ejemplo con __{lattice}__:
+
+```{r lattice_chunk, echo=TRUE, results='asis', message=FALSE, warning=FALSE, error=FALSE, fig.width=20, fig.height=10}
+library(gridExtra)
+library(caret)
+plot1 <- xyplot(G3 ~ absences, 
+                data = studentMat[studentMat$school=="GP",], 
+                scales=list(relation="free", x=list(cex=2), y=list(cex=2)),
+                xlab=list(cex=2),ylab=list(cex=2))
+plot2 <- xyplot(G3 ~ absences, 
+                data = studentMat[studentMat$school=="MS",],
+                scales=list(relation="free", x=list(cex=2), y=list(cex=2)), xlab=list(cex=2),ylab=list(cex=2))
+grid.arrange(plot1, plot2, nrow=1)
+```
+
+---
+
+El mismo ejemplo con __qplot__ de __{ggplot2}__:
+
+```{r qplot, echo=TRUE, results='asis', message=FALSE, warning=FALSE, error=FALSE, fig.width=8, fig.height=5}
+library(ggplot2)
+miGgplot1 <- qplot(absences, G3, 
+                   data = studentMat[studentMat$school=="GP",])
+miGgplot2 <- qplot(absences, G3, 
+                   data = studentMat[studentMat$school=="MS",])
+grid.arrange(miGgplot1, miGgplot2, nrow=1, ncol=2,newpage = TRUE)
+```
+
+---
+
+### ¿Qué es ggplot2?
+ _"In brief, the grammar tells us that a statistical graphic is a_ __mapping__ _from data to_ __aesthetic__ _attributes (colour, shape, size) of_ __geometric__ _objects (points, lines, bars). The plot may also contain statistical transformations of the data and is drawn on a specific coordinate system_" [*]
+
+* Es una implementación de _"Grammar of graphics"_
+* Debemos pensar en __verbo__, __nombre__, y __adjetivo__ para nuestros gráficos
+* __qplot()__: Hace más transparente lo que hay debajo
+* __ggplot()__: Es la función básica, más flexible para llevar a cabo lo que no podemos con __qplot()__
+
+[*] _Fuente:_ __ggplot2 book__
+
+---
+
+El mismo ejemplo con __ggplot__ de __{ggplot2}__
+
+```{r gplot, echo=TRUE, results='asis', message=FALSE, warning=FALSE, error=FALSE, fig.width=8, fig.height=5}
+library(ggplot2)
+g1 <- ggplot(studentMat, aes(absences, G3))
+g1 + geom_point() + facet_grid(. ~ school)
+```
+
+---
+
+### Gráficos exploratorios: _Tips_
+
+* Utiliza __smoothing__ cuando tengas muchos puntos en tu _scatterplot_ (ajustas una línea a los puntos, tratando de separar visualmente lo que es random de lo que no)
+* A veces, es necesario hacer muestreo en los gráficos (_zoom in_). Utiliza __sample()__.
+* Recomendable también la librería __{maps}__, para mapas básicos
+* Considera estudiar los _NAs_ con gráficos (ej.: _boxplot(x ~ is.na(y))_)
+* Para matrices: __matplot()__ __{graphics}__
+* Customiza paneles de __{lattice}__ con _"panel"_
+* Con __ggplot2__:
+  + Utiliza _facets_
+  + Juega con _aes()_
+  + Customiza las etiquetas con _labs()_
+  + Modifica parámetros globales con _theme()_
+
+---
+
+### Clustering
+* En la etapa de análisis exploratorio, utilizamos el _Clustering_ para clasificar los datos, encontrar patrones, ...
+* __Clustering jerárquico__ (__hclust()__): Hay que definir la distancia
+* __Kmeans__: Fijar a priori número de clusters
+* Importante: Saber interpretar los resultados
+
+---
+
+# 19. Visualización de datos con R
+
+---
+
+## Interpretar los resultados
+
+* Iteramos con nuestro cliente, para orientar los resultados a su aplicación en el Negocio
+* Debemos responder:
+  + ¿Por qué? este modelo es bueno para el Negocio?
+  + ¿Estamos respondiendo a la cuestión que se nos planteaba al principio?
+* Se deben explicar los coeficientes, las variables
+* Se deben interpretar las medidas de incertidumbre
+* El lenguaje debe ser apropiado
+  + Idioma
+  + Adecuado al interlocutor
+  + Correcto (revisado)
+* Debe quedar claro con el lenguaje, si estamos reportando:
+  + un análisis descriptivo
+  + o exploratorio (correlación entre, asociado con)
+  + o predictivo (explica, predice)
+  + o causal (nos lleva a, causa), ...
+
+---
+
+## Sintetizar/documentar los resultados
+
+* El código será reproducible o repetible
+  + Seguirá una guía de estilo
+  + Será uno de los outputs del proceso
+  + Recomendable __R markdown__
+
+* Debemos utilizar __storytelling__
+  + Los resultados se deben presentar de forma sencilla
+  + El trabajo debe ser entendible
+  + Se mostrará al Negocio cómo utilizar los resultados 
+  + No se incluirá todo el análisis, sólo lo   que lleva a los resultados
+  + No se explicará el proceso cronológicamente, sino siguiendo la historia que contamos
+  + Sólo se incluirán las figuras que contribuyan a la historia
+  + Las figuras no serán como las exploratorias, se utilizarán técnicas de Visualización más avanzadas
+
+---
+
+## Visualizaciones con R
+
+* Sistema de gráficos "básico"
+* Sistema "lattice"
+* ggplot2
+* Además:
+  + __grDevices__: Para jugar con los colores
+  + __RColorBrewer__: Paletas de colores, mapas
+  + __ggvis__: Visualizaciones interactivas
+  + __rCharts__: Visualizaciones javascript interactivas desde R
+
+---
+
+### {grDevices}: Colores y paletas de colores
+ * colorRamp()
+ * colorRampPalette()
+ * colors()
+ 
+### {RColorBrewer}: Paletas de colores, orientadas a mapas
+ * brewer.pal()
+
+---
+
+### ggvis
+* Visualizaciones interactivas
+* Sintaxis con __operador pipe %>%__ y similar a _ggplot2_
+* Construido encima de __Shiny__
+* Provisión de los Gráficos en el Navegador web usando __vega__: JSON -> HTML5 o SVG
+* http://ggvis.rstudio.com/interactivity.html
+* http://www.rstudio.com/shiny
+
+---
+
+### rCharts
+* Visualizaciones _javascript_ interactivas desde R
+* Interfaz similar a _lattice_
+* http://rcharts.io
+
+---
+
+### Visualización de datos con R: _Tips_
+* Cuida los colores
+* Presta especial atención a los ejes (__xlab()__, __ylab__, ...). Deben ser informativos.
+* También al aspecto de las leyendas (__legend()__, __annotations()__, __text()__, __mtext__() ...)
+* Y a los títulos (__main()__, __title()__)
+* Utiliza __paneles__, compara _plots_
+* Especialmente útiles los _graphics devices_ __PDF__, __PNG__, __JPEG__, __SVG__, ...
+  + Función __dev.copy__(png, file="miFichero.PNG"")
+  + Función __dev.cpy2pdf__(file=miFichero.PDF)
+  + (...)
+  + Siempre __dev.off()__
+* __Shiny__: Visualizaciones interactivas para la Presentación de tus resultados; resultados en página web, construcción de aplicaciones...
+
+---
+
+# 20. Construir Productos de Análisis de datos con R
+
+---
+
+# 21. Bibliografía
+
+---
+
+## Bibliografía. Manuales referencia R en español
+* https://cran.r-project.org/doc/contrib/R-intro-1.1.0-espanol.1.pdf
+* https://cran.r-project.org/doc/contrib/rdebuts_es.pdf
+
+
+## Bibliografía.
+* _Libros R_:
+  ** http://www.r-project.org/doc/bib/R-books.html
+  ** __Hands on Programming with R. Garret Grolemund__: http://shop.oreilly.com/product/0636920028574.do?sortby=bestSellers
+* __The elements of statistical learning__: http://statweb.stanford.edu/~tibs/ElemStatLearn/
+* __R news & Tutorials__: http://www.r-bloggers.com/
+
+## Bibliografía. __Data visualization__ con R
+* http://lmdvr.r-forge.r-project.org/figures/figures.html
+* http://www.amazon.com/R-Graphics-Cookbook-Winston-Chang/dp/1449316956
+* http://www.amazon.com/ggplot2-Elegant-Graphics-Data-Analysis/dp/0387981403
+
+---
+
+# 21. Links de interés
+
+---
+
+## Links de interés: R intro
+* _Web de referencia_: http://cran.r-project.org
+* _Cursos y tutoriales_: https://www.datacamp.com/
+* _Distribuciones en R_: http://cran.r-project.org/web/views/Distributions.html
+* __Computing for Data analysis__: http://www.youtube.com/watch?v=tvv4IA8PEzw&list=PLjTlxb-wKvXOzI2h0F2_rYZHIXz8GWBop&index=6
+* _Guía estilo R (__Google__)_: https://google.github.io/styleguide/Rguide.xml
+
+---
+
+## Links de interés: Leer y escribir datos
+
+* http://en.wikipedia.org/wiki/JSON
+* https://cran.r-project.org/web/packages/httr/index.html
+* http://www.r-bloggers.com/?s=Web+Scraping
+* https://cran.r-project.org/web/packages/RMySQL/index.html
+* https://cran.r-project.org/web/packages/XLConnect/vignettes/XLConnect.pdf
+* _Recursos adicionales_:
+  + http://www.bigmemory.org/: Para datos que no caben en la RAM
+  + https://github.com/RevolutionAnalytics/RHadoop/wiki: Para interacción R y Hadoop (por Revolution Analytics)
+
+---
+
+## Links de interés: Datasets
+
+* Open data:
+  + http://www.data.gov/
+  + http://www.data.gouv.fr/
+  + http://data.gov.uk/
+  + http://www.gapminder.org/
+  + http://www.asdfree.com/
+* Datasets para _machine learning_
+  + http://archive.ics.uci.edu/ml/
+
+---
+
+## Links de interés: data.table
+* Data.table: http://stackoverflow.com/questions/13618488/what-you-can-do-with-data-frame-that-you-cant-in-data-table
+
+##  Links de interés: Análisis exploratorio con R
+* Plots: http://gallery.r-enthusiasts.com/
+* Dendogramas: http://gallery.r-enthusiasts.com/RGraphGallery.php?graph=79
+
+---
+
+## Links de interés: Data visualization con R
+* https://cran.r-project.org/web/packages/ggplot2/index.html
+* http://www.r-bloggers.com/basic-introduction-to-ggplot2/
+* https://cran.r-project.org/web/packages/lattice/index.html
+* _Top ten de los peores gráficos_: https://www.biostat.wisc.edu/~kbroman/topten_worstgraphs/
