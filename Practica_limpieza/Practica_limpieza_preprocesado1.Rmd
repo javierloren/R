@@ -1,0 +1,250 @@
+---
+title: "Práctica limpieza y preprocesado de datos"
+author: "Javier de Castro Rodríguez"
+date: "2022-12-01"
+output:
+  html_document: default
+  pdf_document: default
+---
+
+
+
+#  1. Objetivos
+
+En esta práctica se pide **codificar** y **comentar** las acciones necesarias a realizar sobre un "messy dataset" para convetirlo en un "tidy dataset", limpio y con un formato adecuado.
+
+Se debe **explicar** las acciones con texto y codificarlas en R en un script R Markdown. En este se incluirá el código R con sus explicaciones pertinentes.
+
+# 2. Carga y lectura de dataset
+
+### Creación de directorio y carga de datos
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Accedemos al directorio de trabajo, descargamos fichero desde la URL propuesta:
+
+```{r}
+currentDir <- getwd()
+parentPath <- dirname(currentDir)
+dir <- "Master"
+file <- "EXAMPLE_DataToClean.xlsx"
+fileURL <- "https://docs.google.com/spreadsheets/d/1CDWBeqpUTBd1TkmDz_M6UGRWdHgU7LOcoiGRTvIttKA/edit#gid=0"
+library(downloader)
+download.file(fileURL,"EXAMPLE_DataToClean", mode = "wb")
+
+```
+Cargamos librerias e instalamos paquetes en caso de no tenerlos ya instalados:
+
+```{r }
+libs <- c("tidyverse","readxl", "knitr", "xlsx", "xlsxjars", "rJava", "tidyr", "dplyr", "data.table") #lista de paquetes requeridos
+```
+
+```{r }
+for (i in libs){
+    print(i)
+    if(!require(i, character.only = TRUE))  # require("package") devuelve TRUE o FALSE en función de si tenemos instalado o no el package
+      { install.packages(i, dependencies=TRUE); library(i) }
+}
+```
+### Lectura los datos procedentes de un archivo Excel. 
+
+```{r}
+
+parentPath <- dirname(currentDir)
+EXAMPLE_DataToClean<- read.xlsx(paste0(parentPath, file = "/Master/EXAMPLE_DataToClean.xlsx"), 1, header=TRUE) # Sheet = 1 (carga hoja 1), 
+
+
+```
+## 3. Limpieza de dataset
+
+
+```{r}
+colnames(EXAMPLE_DataToClean) # Obtenemos los nombres de las columnas. 
+```
+
+```{r}
+
+summary(EXAMPLE_DataToClean) # Podemos hacer una inspección preliminar con summary(). Obtenemos información sobre el nombre de las variables, tipo de objeto, dimensiones
+
+#lapply (EXAMPLE_DataToClean, class) Podemos ver la clase de las columnas con función *lapply()*
+```
+
+```{r}
+
+
+names(EXAMPLE_DataToClean) <- gsub(pattern = "[[:punct:]]", replacement = " ", names(EXAMPLE_DataToClean))# Para una mejor comprensión de los nombres quitamos los puntos y los reemplazamos por espacios con gsub() 
+
+
+```
+
+Renombramos variables
+
+```{r}
+example_tidy <- rename(EXAMPLE_DataToClean, Area = (2), Street1 = (3), Street2 = (4), html = (5)) # rename() nos permite cambiar el nombre de las columnas que seleccionemos. 
+head(example_tidy)
+
+
+
+```
+
+Se detectan *__NA (not available)__* valores  en la columna **Area** :
+
+```{r}
+
+
+example_tidy <- example_tidy %>%  fill("Area", .direction = "down") # fill() nos permite reemplazar valores missing por valores previos. La dirección por default es down. 
+
+
+```
+
+En la columna Street1 sustituimos caracter "å" por un espacio:
+
+```{r}
+example_tidy$Street1<- gsub("å"," ",example_tidy$Street1) # función gsub() para modificar las ocurrencias de una expresión por el segundo argumento, en nuestro caso un espacio
+
+head(example_tidy)
+```
+Para uniformizar la estructura de las columnas podemos poner la primera letra de cada palabra en mayúscula con *str_to_title()*. Si quisieramos poner todas las letras en mayúsculas o en minúsculas podríamos usar *toupper()* y *tolower()* respectivamente
+
+```{r}
+example_tidy$Street1 = str_to_title(example_tidy$Street1)
+example_tidy$Street2 = str_to_title(example_tidy$Street2)
+head(example_tidy)
+
+
+
+```
+
+
+Vemos similitudes en filas de la columna Street1 y Street2. Podríamos simplificar en caso de tener valores duplicados
+
+```{r}
+#duplicated(example_tidy) determinamos cuales son los valores duplicados en filas
+
+example_tidy1 <- example_tidy %>% distinct(Street1, Street2, html, Area, Year) # distinct() nos devueve los valores únicos de las columnas seleccionadas
+
+head(example_tidy1)
+```
+Comparamos columna Street1 con columna Street2
+
+```{r include= FALSE}
+example_tidy1 %>% 
+  mutate(test = if_else(
+   Street1 == Street2, "equal", "different"))  #mutate() para crear columna con resultado del test
+
+```
+
+Comprobamos con *ifelse()* si Street1 y Street2 son iguales:
+
+```{r}
+example_tidy1$street <- ifelse(example_tidy1$Street1 != example_tidy1$Street2, 
+                                FALSE,
+    ifelse(example_tidy1$Street1 == example_tidy1$Street2, TRUE))
+
+head(example_tidy1)
+```
+
+
+
+Una vez comprobado que las columnas Street1 y Street2 son iguales eliminamos la columna Street2 y la variable que habíamos creado **street**
+
+
+
+```{r}
+example_tidy2 <- example_tidy1 %>% select(-c(Street2, street))
+head(example_tidy2)
+
+
+```
+
+En la columna __html__ detectamos *__NA__* . En este caso lso reemplazamos por la palabra 'missing'. 
+
+
+```{r include=FALSE}
+#example_tidy[is.na(example_tidy)] <- 0  Sustituir NA por valor 0
+
+example_tidy2$html<- example_tidy2$html  %>% replace_na('missing')
+```
+
+Sustituimos las 'html entities' *('&nbsp;', '&lt;', '&lt;', '&amp;', '&euro;', '&quot;', ... )* por su 'Entity number' (<, >, €, ", ...)
+
+
+```{r}
+example_tidy2$html<- gsub("&amp;", " & ",example_tidy2$html)
+
+example_tidy2$html<- gsub("&ndash;" , "-",example_tidy2$html)
+
+example_tidy2$html<- gsub("&lt;" , "< ",example_tidy2$html)
+
+example_tidy2$html<- gsub("&quot;" , " “ ",example_tidy2$html)
+
+example_tidy2$html<- gsub("&euro;" , " € ",example_tidy2$html)
+
+example_tidy2$html<- gsub("&nbsp;", " ",example_tidy2$html)
+
+example_tidy2$html<- gsub("&gt;", " > ",example_tidy2$html)
+
+example_tidy2$html<- gsub("&apos;", " ' ",example_tidy2$html)
+
+example_tidy2$html<- gsub("ndash", " - ",example_tidy2$html)
+
+head(example_tidy2)
+
+```
+Una vez sustiuidos los caracteres especiales y ante la presencia de un número elevado de **__NA__**, podríamos prescindir de la columna __html__ considerando que es de escasa relevancia
+
+
+```{r}
+example_tidy3 <- example_tidy2 %>% select(-c(html))
+head(example_tidy3)
+```
+
+# 4. Visualización
+
+```{r}
+
+
+ggplot(example_tidy3 , aes(Area), position (width = 1)) + geom_bar(fill = "steelblue")
+
+
+```
+
+```{r}
+ggplot(example_tidy3, aes(Year))+ geom_bar()+ coord_flip()
+```
+
+
+# 4. Exportar dataset
+
+Exportamos a un fichero local el dataset trabajado
+
+```{r}
+library(rJava)
+
+outputDir <- "../Master/datos/output"
+if (!file.exists(outputDir)) {
+  dir.create(outputDir)
+}
+
+write.xlsx(example_tidy3,  "./datos/exampletidy.xlsx")
+
+```
+
+# 5. Conclusiones
+
+El mayor número de datos tomados es en al área de Birmingham durante el año 2011.
+
+Mayor porcentaje de datos corresponde al año 2011.
+
+Encontramos duplicidad de calles. El número de estas duplicidades es mayor en el área de Birmingham.
+
+Falta un elevado número de registros en la columna "html". No juega un papel relevante dentro del dataset.
+
+
+
+
+
+
