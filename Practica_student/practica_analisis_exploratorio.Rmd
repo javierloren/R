@@ -1,0 +1,156 @@
+---
+title: "Práctica análisis exploratorio con R"
+author: "Javier de Castro Rodríguez"
+date: "2022-11-07"
+output:
+  html_document:
+    df_print: paged
+---
+
+## 1.Objetivo
+
+Esta práctica consiste en entregar un script R markdown con el Análisis Descriptivo y Exploratorio del dataset principal utilizado en la sesión "Introducción a R". También clasificaremos a los estudiantes como aprobados y suspensos con base en la nota final __G3__
+Relacionaremos variables que pudieran condicionar esta nota.  
+
+Usaremos los datos de los estudiantes de matemáticas. (Podríamos hacer el proceso de igual manera con los estudiantes de portugués)
+
+
+---
+## 2.Preparación, carga de datos
+
+En primer lugar accedemos a nuestro directorio de trabajo, fijamos la URL de acceso a la información, descargarmos su fichero y lo descomprimimos:
+
+
+```{r dir_R, echo=TRUE, results='asis', message=FALSE, warning=FALSE, error=FALSE}
+getwd()
+fileURL <- "https://archive.ics.uci.edu/ml/machine-learning-databases/00320/student.zip"
+download.file(fileURL,"student.zip", mode = "wb")
+unzip("student.zip", exdir = "./dir_R")
+```
+Lectura del dataset:
+
+```{r readtable, echo=TRUE, results='asis', message=FALSE, warning=FALSE, error=TRUE}
+library(knitr)
+studentMat <- read.table("./dir_R/student-mat.csv", row.names = NULL, sep = ";", header = TRUE)
+kable(head(studentMat[,1:5]))
+```
+
+## 3.Análisis descriptivo
+
+Vamos a  analizar algunas de las variables de nuestros dataframes de manera descriptiva.
+
+```{r}
+str(studentMat) # str() para  ver estructura interna de un objeto. 
+```
+
+Podemos hacer una inspección preliminar de otra manera a la vista anteriormente. Usaremos summary()
+
+```{r dimatrib, echo=TRUE, results='asis', message=FALSE, warning=FALSE, error=FALSE}
+
+dim(studentMat)
+kable(summary(studentMat[,1:33]))
+
+```
+
+## 4. Análisis exploratorio
+
+En este apartado trabajaremos con las variables __age__, __Walc__, __romantic__,__G3__.
+
+```{r}
+
+library(dplyr)
+studentMat_modelo <- studentMat %>% select (age, Walc, romantic, G3)
+head(studentMat_modelo)
+```
+
+
+
+Clasificamos alumnos como aprobados o suspensos en función de si la nota final (G3) es mayor o menor de 6.
+
+Añadimos variable calificaciones
+
+```{r}
+
+studentMat_modelo$calificaciones <- ifelse(studentMat_modelo$G3>=6,"aprobado","suspenso")
+table(studentMat_modelo$calificaciones)
+
+```
+
+
+A continuación hacemos gráfico que relaciona las calificaciones que se obtienen con las variables seleccionadas anteriormente. 
+
+En este caso la primera relación que revisaremos es con la edad:
+
+```{r }
+library(ggplot2)
+ggplot(studentMat_modelo, aes(age)) + geom_bar() + 
+  facet_grid(calificaciones ~ .) + 
+  ggtitle("Plot 1: Diagrama de barras calificaciones en funcion de la edad") + 
+  theme(plot.title = element_text(vjust = +1.5, size = 12))
+```
+
+Relacionamos la edad con el consumo de alcohol en los fines de semana:
+
+```{r}
+
+ggplot(studentMat_modelo, aes(Walc)) + geom_bar() + 
+  facet_wrap(~ age) + 
+  ggtitle("Plot 2: Diagrama de barras consumo alcohol fin de semana por edad") + 
+  theme(plot.title = element_text(vjust = +1.5, size = 12))
+```
+Comparamos media de notas finales
+
+```{r}
+aggregate(studentMat_modelo["G3"], studentMat_modelo["Walc"], mean)
+aggregate(studentMat_modelo["G3"], studentMat_modelo["age"], mean)
+```
+
+Podemos observar que el mayor de estudiantes que suspenden se presenta en la edad de 18 años y que esto está relacionado con la cantidad de estudiantes que en la misma edad consumen alcohol los fines de semana.
+
+Se podría concluir en principio, que los suspensos guardan relación directa con la frecuencia de consumo de alcohol los fines de semana. Para profundizar deberíamos ver más relaciones de la nota final con otra variables. 
+
+Por ejemplo, podríamos tener en cuenta las relaciones de pareja. Veremos si esta circunstancia influye en la nota final
+
+
+
+```{r}
+ggplot(studentMat_modelo, aes(x = romantic)) + geom_bar(colour="black", alpha=.5, stat="count") +
+facet_grid(calificaciones ~ .) +
+ggtitle ("Plot 3: Diagrama de barras relación sentimental con calificaciones ") +
+theme(plot.title=element_text(vjust = +1.5, size = 12))
+
+
+```
+
+Comparamos ahora la media de notas finales
+
+```{r}
+aggregate(studentMat["G3"], studentMat["romantic"], mean)
+
+```
+
+Plasmamos la relación que existe entre la nota final y tener una relación sentimental
+
+```{r}
+boxplot(G3~romantic,data=studentMat_modelo, main=" Plot 4. Distribucion de la nota final", col=(c("black","grey")),
+  	xlab="Relacion sentimental", ylab="Nota Final")
+
+```
+
+
+## 5. Conclusiones
+
+Podemos ver que la mayoría de estudiantes de matemáticas son menores de edad y que además suelen ser los que más consumen alcohol durante los fines de semana.
+
+El mayor número de suspensos se concentra en la edad de 18 años. Este grupo de edad además tiene una frecuencia alta en consumo de alcohol los fines de semana.
+
+Aparentemente existe relación entre estas variables.
+
+Por otro lado la variable "romantic" no guarda una relación determinante en el suspender o aprobar. Si parece claro que el número de estudiantes aprobados sin relación sentimental es mayor que aquellos que si la tienen. En el caso de los estudiantes que suspenden es similar.
+
+La nota media en general va bajando a medida que aumenta la edad, exceptuando la edad de 20 donde se constata un aumento importante.
+
+
+
+
+
