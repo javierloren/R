@@ -1,0 +1,120 @@
+---
+title: "Pràctica_videotutoría"
+author: "Javier de Castro Rodríguez"
+date: "2022-11-16"
+output:
+  beamer_presentation: default
+  powerpoint_presentation: default
+  slidy_presentation: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+## Ejercicio 7. 
+Lee el fichero “beer2.csv” de tu sistema de ficheros local y cárgalo en un data.frame de nombre “beer”
+Utiliza una conexión “file”
+Saca por pantalla las primeras filas del data.frame creado.
+
+```{r}
+con<-file("datos/beer2.csv", "r")
+beer<- read.csv(con, row.names = 1)
+close(con)
+head(beer[,1:5])
+```
+Función tail() para descripción de datos
+
+```{r}
+library(dplyr)
+tail(select(beer, beer_name, review_overall))
+```
+
+Función tail usando pipe %>% 
+
+```{r}
+tail(beer %>% select(beer_name,review_overall)) 
+```
+Función head()
+
+```{r}
+head(beer %>% filter(abv>15) %>% select(1:5))
+```
+
+
+Función mutate() crea nueva variable
+
+```{r}
+beer %>%mutate(palateTasteRatio=(review_palate/review_taste)) %>% select(palateTasteRatio) %>% head()
+```
+Función summarise() para descripción
+
+```{r}
+beer %>% summarise(media=mean(review_overall), mediana=median(review_overall),
+variance=var(review_overall))
+```
+ Agrupamos por review_overall y beer_style:
+ 
+```{r}
+beer %>% group_by(review_overall, beer_style) %>% summarise(n=n())
+```
+
+
+```{r}
+beerList <- beer %>% 
+  distinct(beer_id, beer_name, brewer_id, beer_style, abv) %>% select(beer_id, beer_name, brewer_id, beer_style, abv)
+dim(beerList)[1]
+length(unique(beer$beer_id))
+```
+```{r}
+reviewList <- beer %>% select(profile_name, time,beer_id, review_aroma, review_overall, review_taste, review_appearance, review_palate, text)
+dim(beer)[1]
+dim(reviewList)[1]
+```
+
+```{r}
+beerJoin <- beerList %>% inner_join(reviewList)
+dim(beerJoin)
+dim(beer)
+```
+```{r}
+beerList %>% arrange(beer_id) %>% head()
+```
+
+```{r}
+reviewList %>% arrange(desc(time), review_overall) %>% head()
+```
+
+```{r}
+avgReview <- beer %>% group_by(beer_style) %>% 
+summarise (meanAppearance = mean(review_appearance),meanTaste = mean(review_taste),meanAroma = mean(review_aroma))
+
+```
+
+```{r}
+library(tidyr)
+library(data.table)
+avgReviewGather <- gather(data.table(avgReview), "reviewType", "rating", 2:4,  convert=TRUE) %>% arrange (rating)
+
+```
+
+```{r}
+avgReviewSpread <- spread(avgReviewGather, "reviewType", "rating")
+head(avgReviewSpread)
+```
+
+```{r}
+outputDir <- "datos/output"
+if (!file.exists(outputDir)) {
+  dir.create(outputDir)
+}
+dim(beerJoin)
+```
+
+```{r}
+write.table(beerJoin, file = paste(outputDir, "tidyBeer.csv", sep = "/"), sep = ";" , row.names = FALSE)
+```                                
+
+
+
+

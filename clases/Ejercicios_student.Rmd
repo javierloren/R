@@ -1,0 +1,187 @@
+---
+title: "Tarea_student"
+author: "Javier"
+date: "2022-11-04"
+output: html_document
+---
+
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+dir_R <- "/Users/Desktop/Master/dir_R"
+```
+
+
+
+## Objetivo de la práctica
+
+Trabajar el dataset "student", explorando y analizando patrones
+
+
+## Comprobar versión de R
+
+```{r versioninfo, echo=TRUE, results='hide', message=FALSE, warning=FALSE, error=FALSE}
+sessionInfo()
+
+```
+## Cargamos nuestro dataset
+
+read.csv() y read.csv2()
+* __sep__="," por defecto en read.csv
+* __sep__=";" por defecto en read.csv2
+* __header__=TRUE por defecto en ambos
+
+
+```{r conreadcsv2, echo=TRUE, results='hide', message=FALSE, warning=FALSE, error=FALSE}
+getwd()
+con <- file("student-por.csv","r")
+studentPor <- read.csv2(con)
+close(con)
+head(studentPor[,1:10])
+```
+
+
+##  Igual proceso para studentMat usando read.table
+
+
+
+```{r read.table, echo=TRUE, results='hide', message=FALSE, warning=FALSE, error=FALSE}
+library(knitr)
+getwd()
+studentMat <- read.table("student-mat.csv", row.names=NULL, sep=";", header=TRUE)
+kable(head(studentMat[,1:5]))
+```
+
+
+
+
+
+## Ejercicio 1
+
+Crea un nuevo data.frame de nombre "studentMatPor"
+
+que tenga los 382 estudiantes que han estudiado ambas materias.
+
+Esos estudiantes se identifican por tener los mismos valores
+
+en los data.frames "studentMat" y "studentPor"
+
+para estos atributos:
+
+"school","sex","age","address","famsize","Pstatus","Medu","Fedu",
+"Mjob","Fjob",reason","nursery","internet"
+
+
+
+```{r merge, echo=TRUE, results='asis', message=FALSE, warning=FALSE, error=FALSE}
+studentMatPor <- merge(studentMat,studentPor,
+                       by=c("school","sex","age",
+                            "address","famsize",
+                            "Pstatus","Medu",
+                            "Fedu","Mjob",
+                            "Fjob","reason",
+                            "nursery","internet"), 
+                       all=FALSE,
+                       suffixes=c("mat","por"))
+dim(studentMatPor)[1]
+```
+
+
+
+## Ejercicio 2
+
+Crea un data.frame de nombre "studentMatPor2",
+
+que sea copia de "studentMatPor",
+
+pero ordenado en primer lugar __por orden creciente__ de la variable "age",
+
+y en segundo lugar __por orden también creciente__ de la variable "mjob"
+
+
+
+
+```{r order1, echo=TRUE, results='hide', message=FALSE, warning=FALSE, error=FALSE}
+studentMatPor [1:10,1:9]
+```
+
+
+```{r order1plot, echo=FALSE, results='markup', message=FALSE, warning=FALSE, error=FALSE, fig.width=9,fig.height=6}
+library(gplots)
+textplot(kable(studentMatPor [1:10,1:9]), cex=1.1, fixed.width = TRUE, mar=c(0,0,0,0))
+```
+
+
+```{r order1b, echo=TRUE, results='hide', message=FALSE, warning=FALSE, error=FALSE}
+studentMatPor2 <- studentMatPor[order(
+        studentMatPor[,3],
+        xtfrm(studentMatPor[,9])), ]
+studentMatPor2[1:10,1:9]
+```
+
+```{r order1bplot, echo=FALSE, results='markup', message=FALSE, warning=FALSE, error=FALSE,fig.width=9,fig.height=7}
+studentMatPor2Plot <- studentMatPor2[1:10,1:9]
+row.names(studentMatPor2Plot) <- NULL
+textplot(kable(studentMatPor2Plot, cex=1.1, fixed.width = TRUE, mar=c(0,0,0,0)))
+```
+
+
+## Ejercicio 3
+
+Ordenar dataframe "studentMatPor2" del ejercicio anterior:
+
+  __en orden decreciente de la variable "age"__,
+
+ __en orden decreciente de la variable "famsize"__.
+ 
+ famsize: "LE3" - less or equal to 3 y "GT3" - greater than 3. Orden decreciente primero las GT3
+
+
+
+```{r order2, echo=TRUE, results='hide', message=FALSE, warning=FALSE, error=FALSE}
+studentMatPor2 <- studentMatPor[order(
+        -studentMatPor[,3],
+        xtfrm(studentMatPor[,5])), ]
+row.names(studentMatPor2) <- NULL
+studentMatPor2[1:20,1:5]
+```
+
+
+## Ejercicio 4 
+
+Entre los estudiantes de matemáticas: ¿quiénes suman en total más ausencias, los que pagan extraescolares, 
+o los que no?
+
+
+```{r tapply, echo=TRUE, results='hide', message=FALSE, warning=FALSE, error=FALSE,fig.width=25,fig.height=3}
+tapply(studentMat$absences,studentMat$paid,sum)
+```
+
+
+## Ejercicio 5
+
+Calcular la media de graduación final de los alumnos de matemáticas, por cada posible profesión paterna.
+
+```{r split, echo=TRUE, results='hide', message=FALSE, warning=FALSE, error=FALSE}
+divideFjob <- split(studentMat, studentMat$Fjob)
+sapply(divideFjob, function(x) mean(x$G3))
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

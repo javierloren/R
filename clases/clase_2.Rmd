@@ -1,0 +1,78 @@
+---
+title: "practica_2"
+author: "Javier de Castro Rodríguez"
+date: "2022-11-11"
+output:
+  slidy_presentation: default
+  ioslides_presentation: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+list.files(path="../Master", full.names = FALSE, recursive = FALSE, include.dirs = FALSE)
+```
+
+
+
+```{r dir_R, echo=TRUE, results='asis', message=FALSE, warning=FALSE, error=FALSE}
+getwd()
+fileURL <- "https://archive.ics.uci.edu/ml/machine-learning-databases/00320/student.zip"
+download.file(fileURL,"student.zip", mode = "wb")
+unzip("student.zip", exdir = "./dir_R")
+```
+
+
+```{r}
+getwd()
+conBeer <- file("../datos/beer2.csv","r")
+beer <- read.csv(conBeer, row.names=1)
+close(conBeer)
+head(beer)
+```
+
+
+```{r}
+library(xlsx); 
+library(xlsxjars); 
+library(rJava);
+library (knitr);
+
+currentDir <- getwd()
+parentPath <- dirname(currentDir)
+anemonefish <- read.xlsx2(paste0(parentPath, file = "/datos/anemonefish.xls"), sheetIndex=1,startRow=14,endRow=40, row.names=NULL, colIndex=c(3:13),header=TRUE)
+kable(head(anemonefish[,1:4]))
+```
+
+ Manipulación de strings. Pasar variables a minúsculas
+
+```{r}
+names(beer)
+names(beer) <- tolower(names(beer))
+```
+Ejercicio 16. Comprobar underscores de columna review_taste
+
+```{r}
+length(grep("_",beer$review_taste))
+
+```
+Ejercicio 17. Revisar si son apropiados los nombres de las columnas
+
+```{r}
+names(beer) <- gsub(pattern = '(_)([[:lower:]])',
+                    perl = TRUE, 
+                    replacement = '\\U\\2',
+                    names(beer))
+names(beer)
+```
+
+Eliminar espacios innecesarios con str_trim()
+
+```{r}
+library(stringr)
+cleanText <- str_trim(beer$text)
+trimSpaces <- sum(nchar(beer$text)) - sum(nchar(cleanText)) #comprobar los espacios eliminados
+trimSpaces
+
+```
+
+

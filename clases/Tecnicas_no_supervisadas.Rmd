@@ -1,0 +1,378 @@
+---
+title: "Tecnicas:no_supervisadas"
+author: "Javier de Castro Rodríguez"
+date: "2022-11-18"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+path_source <- "C:/Users/javie/Desktop/Master" 
+  path_data <- "C:/Users/javie/Desktop/Master"   
+  setwd(path_data)
+```
+
+
+
+```{r}
+df <- read.table(file.path(path_data,'Anscombe.txt'), header=T, 
+                     stringsAsFactors = FALSE)
+    df %>% group_by(case) %>% filter(!is.na(x)) %>%
+      dplyr::summarise(
+        n = n(),
+        mean_x = mean(x),
+        variance_x = var(x), 
+        mean_y = mean(y),
+        variance_y = var(y),
+        corr_ = cor(x,y)
+      )
+  
+```
+```{r}
+ggplot(df, aes(x=x, y=y, color=case)) +  geom_point()  +  facet_wrap( ~ case, ncol = 2)
+  
+
+```
+
+```{r}
+ggplot(df, aes(x=y, y=..count..)) + 
+    geom_histogram(fill="cornsilk", colour="grey60", binwidth=1) +
+    geom_density()
+
+
+```
+
+```{r}
+  p1 <- ggplot(df, aes(x=x)) + geom_density() + xlim(0, 20) + facet_grid(case ~ .)
+  p2 <- ggplot(df, aes(x=y)) + geom_density() + xlim(0, 20) + facet_grid(case ~ .)
+  grid.arrange(p1, p2 , ncol=2)
+
+```
+```{r}
+ggplot(filter(df, case=='A'), aes(x=x, y=y)) + geom_point() + 
+    stat_density2d() + xlim(0,20) +ylim(0,15)
+  
+
+```
+
+```{r}
+ggplot(filter(df, case=='A'), aes(x=x, y=y)) + geom_point() + 
+    stat_density2d(aes(fill = ..level..), geom = "polygon") + xlim(0,20) +ylim(0,15) 
+
+```
+
+```{r}
+  {
+    datasaurus_dozen %>% 
+      group_by(dataset) %>% 
+      dplyr::summarise(
+        mean_x    = mean(x),
+        mean_y    = mean(y),
+        std_dev_x = sd(x),
+        std_dev_y = sd(y),
+        corr_x_y  = cor(x, y)
+      )
+    
+    ggplot(datasaurus_dozen, aes(x = x, y = y, colour = dataset))+
+      geom_point()+
+      theme_void()+
+      theme(legend.position = "none")+
+      facet_wrap(~dataset, ncol = 3)
+    }
+}
+```
+```{r}
+{
+  require(ggplot2)
+  require(reshape2)
+  require(RgoogleMaps)
+  require(ggmap)
+  require(grid)
+  
+  
+{
+  theft <- subset(crime, offense == "theft" & between(lat, 29,30.2) & lon > -95.8)
+  lonr <- range(theft$lon)
+  latr <- range(theft$lat)
+  h_map <- get(load("crime_map.rda"))
+  
+  ggplot(theft, aes(lon, lat)) +
+  annotation_custom((rasterGrob(h_map$myTile, 
+                            width = unit(1,"npc"), 
+                            height = unit(1,"npc"))), lonr[1], lonr[2], latr[1], latr[2]) +
+  geom_density2d(colour = "black") +
+  geom_point(size=0.1, color="grey", alpha=0.2) 
+  }
+}
+
+```
+
+
+```{r}
+{
+  require(leaflet)
+    leaflet <- leaflet() %>% setView(0,0,3)
+    esri <- grep("^Esri", providers, value = TRUE)
+    
+    for (provider in esri) {
+      leaflet <- leaflet %>% addProviderTiles(provider, group = provider)
+    }
+      leaflet %>%
+      addLayersControl(baseGroups = names(esri),
+                       options = layersControlOptions(collapsed = FALSE)) %>%
+      addMiniMap(tiles = esri[[3]], toggleDisplay = TRUE,
+                 position = "bottomleft") %>%
+      htmlwidgets::onRender("
+                            function(el, x) {
+                            var myMap = this;
+                            myMap.on('baselayerchange',
+                            function (e) {
+                            myMap.minimap.changeLayer(L.tileLayer.provider(e.name));
+                            })
+                            }")
+
+    
+    library(htmltools) 
+    aux_ <- 1:30
+    leaflet(theft) %>% addTiles() %>%
+      addMarkers(~lon[aux_], ~lat[aux_], label = ~htmlEscape(address[aux_]))
+} 
+  
+
+```
+```{r}
+ggplot(mpg, aes(x=hwy, y=..density..)) +
+    geom_histogram(fill="cornsilk", colour="grey60", binwidth=1) +
+    geom_density() 
+  quantile(mpg$hwy, 0.1) # median(mpg$hwy)
+  ecdf(mpg$hwy)(20) 
+
+```
+```{r}
+qplot(displ, hwy, data=mpg, facets = . ~ year) + geom_smooth(method="loess")
+
+```
+
+```{r}
+qplot(class, hwy, data = mpg, geom = 'boxplot') 
+  qplot(class, hwy, data = mpg, geom = 'violin') 
+  
+
+```
+```{r}
+
+help(mtcars)
+  aux_ <- mtcars %>% rownames_to_column %>%
+    arrange(mpg) %>% 
+    mutate(cyl = as.factor(cyl)) %>%
+    mutate(color = case_when(
+      cyl==4 ~ "red",
+      cyl==6 ~ "blue",
+      cyl==8 ~ "darkgreen"))
+  dotchart(aux_$mpg,labels=aux_$rowname,cex=.7,groups= aux_$cyl,
+           main="Gas Milage for Car Models\ngrouped by cylinder",
+           xlab="Miles Per Gallon", gcolor="black", color=aux_$color) 
+
+  
+
+```
+```{r}
+library(tidyverse)
+library("PerformanceAnalytics")
+chart.Correlation(mtcars[,c(1,3,4,5,6)], histogram=TRUE, pch=19, method="pearson")
+
+p <- mtcars %>% mutate(am=as.factor(am)) %>% 
+    ggboxplot(x = "cyl", y = "mpg",
+                 color = "am", palette =c("#00AFBB", "#E7B800"),
+                 add = "jitter")#, shape = "gear")
+  
+my_comparisons <- list( c("4", "6"), c("6", "8"), c("4", "8") )
+  p + stat_compare_means(comparisons = my_comparisons, method="t.test")+ # Add pairwise comparisons 
+  p-value
+    stat_compare_means(label.y = 50)  
+
+```
+```{r}
+ {
+    library(circlize)
+    set.seed(999)
+    mat = matrix(sample(18, 18), 3, 6) 
+    rownames(mat) = paste0("S", 1:3)
+    colnames(mat) = paste0("E", 1:6)
+    mat
+    
+    df = data.frame(from = rep(rownames(mat), times = ncol(mat)),
+                   to = rep(colnames(mat), each = nrow(mat)),
+                   value = as.vector(mat),
+                   stringsAsFactors = FALSE)
+     df
+    chordDiagram(mat)
+  
+    }
+
+
+```
+```{r}
+ {
+    require(graphics)
+    require(corrplot)
+    require(factoextra)
+    require(vcd)
+    mosaicplot(HairEyeColor, shade = TRUE)
+  }
+
+```
+```{r}
+{
+    data("alzheimer", package = "coin")
+    alz <- xtabs (~ smoking + disease, data = alzheimer)
+    mosaicplot(alz, shade = TRUE, las=2, main = "alzheimer")
+    assoc(alz, shade=TRUE)
+    
+    xtabs(~ smoking, data = alzheimer) %>% prop.table %>% round(4)
+    xtabs(~ disease, data = alzheimer) %>% prop.table %>% round(4)
+    xtabs(~ smoking+disease, data = alzheimer) %>% prop.table %>% round(2)
+    sum(alz) 
+}
+```
+```{r}
+ (chisq <- chisq.test(alz))
+    (chisq$observed)
+    (round(chisq$expected,2))
+    (round(chisq$residuals, 3))  # Pearson residuals (obs - exp / sqrt(exp) 
+
+```
+
+```{r}
+sum(chisq$residuals^2) 
+    curve(dchisq(x, df = 6), from = 0, to = 40)
+    pchisq(q=28, df=6, lower.tail=FALSE)
+    
+    x_vector <- seq(15, 40)
+    p_vector <- dchisq(x_vector, df = 6)
+    polygon(c(x_vector, rev(x_vector)), c(p_vector, rep(0, length(p_vector))),
+            col = adjustcolor('red', alpha=0.3), border = NA)
+  
+```
+```{r}
+{
+  data(housetasks)
+    file_path <- "http://www.sthda.com/sthda/RDoc/data/housetasks.txt"
+    housetasks <- read.delim(file_path, row.names = 1)
+    dt <- as.table(as.matrix(housetasks))
+    mosaicplot(dt, shade = TRUE, las=2, main = "housetasks")
+    assoc(head(dt, 5), shade = TRUE, las=3)
+    
+    # other representation
+    chisq <- chisq.test(housetasks)
+    corrplot(chisq$residuals, is.cor = FALSE)
+}
+```
+
+```{r}
+{
+  # spearman
+  df <- data.frame(IQ=c(106,86,100,101,99,103,97,113,112,110), 
+                   TV=c(7,0,27,50,28,29,20,12,6,17)) %>% arrange(IQ)
+  plot(df$IQ, df$TV, type='l')
+   
+  df$rank1 <- rank(df$IQ)
+  df$rank2 <- rank(df$TV)
+  cor(df$IQ,df$TV, method='pearson')
+  cor(df$IQ,df$TV, method='spearman')
+  cor(df$rank1,df$rank2, method='pearson')
+  cor(df$IQ,df$TV, method='kendall')
+  
+  # http://www.sthda.com/english/wiki/print.php?id=61
+  require(corrplot)
+  
+  # Third Correlogram Example
+  mcor <- cor(mtcars)
+  round(mcor, digits=2)
+  corrplot(mcor, method="shade", shade.col=NA, tl.srt=45,
+           addCoef.col="black", order="AOE", type='lower')
+  
+}
+```
+
+```{r}
+ cor(mtcars$gear, mtcars$am)
+
+  # partial correlation 
+  {
+  # Relationship between weight and number of meals intake while controlling age
+  # http://www.css.cornell.edu/faculty/dgr2/teach/R/R_corregr.pdf
+  require(ggm)
+  require(ppcor)
+  require(psych)
+}
+```
+```{r}
+df <- data.frame(X = c(2,4,15,20), Y = c(1,2,3,4), Z = c(0,0,1,1))
+    mm1 <- lm(X~Z, df)
+    res1 <- mm1$residuals
+    mm2 <-  lm(Y~Z,df)
+    res2 <- mm2$residuals
+    cor(res1,res2)  # 0.9191 - partial correlation
+    cor(df$X, df$Y)  # 0.9695 - correlation
+  
+    corrplot(cor(df, method="pearson"), 
+             method="shade", shade.col=NA, tl.srt=45,
+             addCoef.col="black", order="AOE", type='lower')
+    
+    corrplot(ppcor::pcor(df, method="pearson")$estimate, 
+             method="shade", shade.col=NA, tl.srt=45,
+             addCoef.col="black", order="AOE", type='lower')
+    
+    
+    # mtcars example
+    corrplot(cor(mtcars, method="pearson"), 
+             method="shade", shade.col=NA, tl.srt=45,
+             addCoef.col="black", order="AOE", type='lower')
+    
+    corrplot(ppcor::pcor(mtcars, method="pearson")$estimate, 
+             method="shade", shade.col=NA, tl.srt=45,
+             addCoef.col="black", order="AOE", type='lower')
+  
+  
+```
+```{r}
+{
+    aux_ <- data.frame(dg=1:365, x=sin(1:365*pi/180), y=cos(1:365*pi/180))
+    cor(aux_$x, aux_$y)
+    plot(aux_$x, aux_$y)
+    aux_ <- data.frame(dg=1:365, x=sin(1:(365*2)*pi/180), y=sin(1:(365*2)*pi*2/180))
+    cor(aux_$x, aux_$y)
+    plot(aux_$x, aux_$y)
+  }
+  
+
+```
+
+```{r}
+
+{ 
+  wine <- read.table("http://archive.ics.uci.edu/ml/machine-learning-databases/wine/wine.data",sep=",")
+  #library(ggbiplot)
+  require(factoextra)
+  
+  }
+
+    n <- 500
+    set.seed(1)
+    aux1_ <- rnorm(n, 15, 15)
+    aux2_ <- rnorm(n, 5, 1)
+    df <- data.frame(d=aux1_+3*aux2_+5, e=aux2_+2*aux1_+8)
+    ggplot(df, aes(x = d, y = e)) +geom_point(size=2, color='magenta')
+    cor(df$d, df$e)
+    
+    df.pca <- prcomp(df, scale=TRUE)
+    ggplot(df.pca$x %>% as.data.frame, aes(x = PC1, y = PC2)) +geom_point(size=2, color="blue")
+    cor(df.pca$x[,1], df.pca$x[,2]) %>% round(3)
+
+
+```
+
